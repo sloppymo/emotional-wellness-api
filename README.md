@@ -76,7 +76,7 @@ src/api/middleware/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/emotional-wellness-api.git
+   git clone https://github.com/sloppymo/emotional-wellness-api.git
    cd emotional-wellness-api
    ```
 

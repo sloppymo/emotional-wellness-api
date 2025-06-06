@@ -20,8 +20,8 @@ authlib==1.2.1
 
 # NLP and Symbolic Processing
 anthropic==0.4.0  # For Claude integration
-numpy==1.25.2
-scikit-learn==1.3.0
+numpy==2.2.6
+scikit-learn==1.7.0
 nltk==3.8.1
 transformers==4.33.1
 

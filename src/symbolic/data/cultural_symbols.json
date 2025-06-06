@@ -1,0 +1,175 @@
+{
+    "western": {
+        "water": {
+            "cultural_meaning": "purification, renewal, and emotional depth",
+            "cultural_associations": [
+                "baptism",
+                "cleansing",
+                "healing",
+                "unconscious mind",
+                "emotional flow"
+            ],
+            "taboos": [],
+            "alternatives": ["river", "ocean", "rain", "spring"],
+            "archetypal_resonance": ["rebirth", "transformation", "journey"]
+        },
+        "fire": {
+            "cultural_meaning": "transformation, passion, and spiritual awakening",
+            "cultural_associations": [
+                "enlightenment",
+                "purification",
+                "divine presence",
+                "creativity",
+                "willpower"
+            ],
+            "taboos": [],
+            "alternatives": ["flame", "spark", "light", "candle"],
+            "archetypal_resonance": ["hero", "magician", "creator"]
+        },
+        "path": {
+            "cultural_meaning": "life journey, personal growth, and destiny",
+            "cultural_associations": [
+                "quest",
+                "pilgrimage",
+                "spiritual journey",
+                "personal development",
+                "choice"
+            ],
+            "taboos": [],
+            "alternatives": ["road", "trail", "journey", "way"],
+            "archetypal_resonance": ["hero", "explorer", "sage"]
+        }
+    },
+    "eastern": {
+        "water": {
+            "cultural_meaning": "adaptability, wisdom, and the flow of life force",
+            "cultural_associations": [
+                "yin energy",
+                "flexibility",
+                "harmony",
+                "wisdom",
+                "life force"
+            ],
+            "taboos": [],
+            "alternatives": ["river", "rain", "mist", "dew"],
+            "archetypal_resonance": ["sage", "self", "innocent"]
+        },
+        "fire": {
+            "cultural_meaning": "vital energy, transformation, and spiritual power",
+            "cultural_associations": [
+                "yang energy",
+                "vitality",
+                "spiritual practice",
+                "inner strength",
+                "transformation"
+            ],
+            "taboos": [],
+            "alternatives": ["flame", "sun", "inner fire", "light"],
+            "archetypal_resonance": ["warrior", "sage", "creator"]
+        },
+        "path": {
+            "cultural_meaning": "way of life, spiritual practice, and harmony",
+            "cultural_associations": [
+                "dao",
+                "spiritual cultivation",
+                "balance",
+                "natural way",
+                "discipline"
+            ],
+            "taboos": [],
+            "alternatives": ["way", "practice", "cultivation", "journey"],
+            "archetypal_resonance": ["sage", "self", "explorer"]
+        }
+    },
+    "indigenous": {
+        "water": {
+            "cultural_meaning": "life source, spiritual connection, and healing",
+            "cultural_associations": [
+                "sacred springs",
+                "rain ceremonies",
+                "purification",
+                "ancestral connection",
+                "healing power"
+            ],
+            "taboos": [
+                "disrespecting water sources",
+                "polluting sacred waters"
+            ],
+            "alternatives": ["rain", "spring", "river", "sacred water"],
+            "archetypal_resonance": ["healer", "ancestor", "caregiver"]
+        },
+        "fire": {
+            "cultural_meaning": "transformation, ceremony, and community",
+            "cultural_associations": [
+                "sacred fire",
+                "ceremonial cleansing",
+                "community gathering",
+                "spiritual transformation",
+                "ancestral connection"
+            ],
+            "taboos": [
+                "misusing ceremonial fire",
+                "disrespecting fire spirits"
+            ],
+            "alternatives": ["sacred flame", "ceremonial fire", "hearth"],
+            "archetypal_resonance": ["elder", "healer", "creator"]
+        },
+        "path": {
+            "cultural_meaning": "life journey, ancestral wisdom, and spiritual quest",
+            "cultural_associations": [
+                "vision quest",
+                "ancestral trails",
+                "sacred journey",
+                "spiritual guidance",
+                "connection to land"
+            ],
+            "taboos": [
+                "disrespecting sacred sites",
+                "taking wrong paths"
+            ],
+            "alternatives": ["trail", "sacred way", "vision path", "spirit journey"],
+            "archetypal_resonance": ["elder", "warrior", "healer"]
+        }
+    },
+    "modern": {
+        "water": {
+            "cultural_meaning": "emotional intelligence, adaptability, and flow state",
+            "cultural_associations": [
+                "emotional awareness",
+                "adaptability",
+                "mindfulness",
+                "stress relief",
+                "mental health"
+            ],
+            "taboos": [],
+            "alternatives": ["flow", "current", "stream", "waves"],
+            "archetypal_resonance": ["self", "explorer", "caregiver"]
+        },
+        "fire": {
+            "cultural_meaning": "passion, motivation, and creative energy",
+            "cultural_associations": [
+                "motivation",
+                "drive",
+                "creativity",
+                "inspiration",
+                "energy"
+            ],
+            "taboos": [],
+            "alternatives": ["spark", "energy", "passion", "drive"],
+            "archetypal_resonance": ["creator", "rebel", "magician"]
+        },
+        "path": {
+            "cultural_meaning": "personal development, career journey, and life choices",
+            "cultural_associations": [
+                "career path",
+                "personal growth",
+                "life goals",
+                "decision making",
+                "progress"
+            ],
+            "taboos": [],
+            "alternatives": ["journey", "direction", "route", "way forward"],
+            "archetypal_resonance": ["explorer", "creator", "ruler"]
+        }
+    }
+} 

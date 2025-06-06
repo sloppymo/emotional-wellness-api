@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} | Emotional Wellness API Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #c0392b;
+            --info-color: #3498db;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .sidebar {
+            background-color: var(--primary-color);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 20px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-healthy {
+            background-color: var(--success-color);
+        }
+        
+        .status-degraded {
+            background-color: var(--warning-color);
+        }
+        
+        .status-unavailable {
+            background-color: var(--danger-color);
+        }
+        
+        .status-unknown {
+            background-color: #6c757d;
+        }
+        
+        .alert-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 3px 6px;
+            border-radius: 50%;
+            background-color: var(--danger-color);
+            color: white;
+            font-size: 0.7rem;
+        }
+        
+        .severity-info {
+            background-color: var(--info-color);
+        }
+        
+        .severity-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .severity-critical {
+            background-color: var(--danger-color);
+        }
+        
+        .severity-emergency {
+            background-color: #7d3c98;
+        }
+        
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .hipaa-compliant-badge {
+            background-color: var(--success-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .user-dropdown {
+            margin-left: auto;
+        }
+        
+        .dropdown-menu {
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white" style="width: 250px;">
+        <a href="/admin/dashboard" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <span class="fs-4">Wellness API Admin</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/admin/dashboard" class="nav-link {% if request.url.path == '/admin/dashboard' %}active{% endif %}" aria-current="page">
+                    <i class="bi bi-speedometer2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/admin/monitoring" class="nav-link {% if request.url.path == '/admin/monitoring' %}active{% endif %}">
+                    <i class="bi bi-graph-up"></i>
+                    Monitoring
+                </a>
+            </li>
+            <li>
+                <a href="/admin/alerts" class="nav-link {% if request.url.path == '/admin/alerts' %}active{% endif %}">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Alerts
+                    {% if alert_count and alert_count > 0 %}
+                    <span class="position-relative">
+                        <span class="alert-badge">{{ alert_count }}</span>
+                    </span>
+                    {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="/admin/metrics" class="nav-link {% if request.url.path == '/admin/metrics' %}active{% endif %}">
+                    <i class="bi bi-bar-chart"></i>
+                    Metrics
+                </a>
+            </li>
+            <li>
+                <a href="/admin/tasks" class="nav-link {% if request.url.path == '/admin/tasks' %}active{% endif %}">
+                    <i class="bi bi-list-task"></i>
+                    Background Tasks
+                </a>
+            </li>
+            <li>
+                <a href="/admin/integrations" class="nav-link {% if request.url.path == '/admin/integrations' %}active{% endif %}">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Integrations
+                </a>
+            </li>
+        </ul>
+        <hr>
+        <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
+                <strong>{{ user.username }}</strong>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/auth/logout">Sign out</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h2">{{ page_title }}</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/admin/dashboard">Admin</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
+            {% block content %}
+            <!-- Page content will go here -->
+            {% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        // Common JavaScript functions
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        }
+        
+        function formatDuration(seconds) {
+            if (seconds < 60) {
+                return `${seconds.toFixed(1)}s`;
+            } else if (seconds < 3600) {
+                return `${(seconds / 60).toFixed(1)}m`;
+            } else if (seconds < 86400) {
+                return `${(seconds / 3600).toFixed(1)}h`;
+            } else {
+                return `${(seconds / 86400).toFixed(1)}d`;
+            }
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

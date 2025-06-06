@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Clinical Dashboard Overview</h1>
+    </div>
+</div>
+
+<!-- Alert Section -->
+<div id="alertsContainer" class="row mb-4">
+    <!-- Alerts will be dynamically loaded here -->
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Active Patients</h6>
+                        <h3 class="mb-0" id="activePatients">-</h3>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Today's Assessments</h6>
+                        <h3 class="mb-0" id="todayAssessments">-</h3>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Success Rate</h6>
+                        <h3 class="mb-0"><span id="successRate">-</span>%</h3>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Weekly Trend</h6>
+                        <h3 class="mb-0"><span id="weeklyTrend">-</span>%</h3>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-arrow-trend-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Crisis Events - Last 7 Days</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="crisisChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Risk Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="riskChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Early Warning Indicators -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Early Warning Indicators</h5>
+                <button class="btn btn-sm btn-primary" onclick="refreshEarlyWarnings()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="earlyWarningsTable">
+                    <p class="text-muted">Loading early warnings...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div id="recentActivityTable">
+                    <p class="text-muted">Loading recent activity...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+// Global variables for charts
+let crisisChart = null;
+let riskChart = null;
+
+// Initialize dashboard on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardSummary();
+    loadEarlyWarnings();
+    initializeCharts();
+    
+    // Refresh data every 30 seconds
+    setInterval(loadDashboardSummary, 30000);
+    setInterval(loadEarlyWarnings, 60000);
+});
+
+// Load dashboard summary data
+async function loadDashboardSummary() {
+    try {
+        const response = await axios.get('/dashboard/api/dashboard/summary');
+        const data = response.data;
+        
+        // Update metrics
+        document.getElementById('activePatients').textContent = data.metrics.activePatients;
+        document.getElementById('todayAssessments').textContent = data.metrics.todayAssessments;
+        document.getElementById('successRate').textContent = data.metrics.interventionSuccessRate.toFixed(1);
+        document.getElementById('weeklyTrend').textContent = data.metrics.weeklyTrend > 0 ? '+' + data.metrics.weeklyTrend.toFixed(1) : data.metrics.weeklyTrend.toFixed(1);
+        
+        // Update alerts
+        updateAlerts(data.alerts);
+        
+        // Update recent activity
+        updateRecentActivity(data.recentActivity);
+        
+    } catch (error) {
+        console.error('Error loading dashboard summary:', error);
+        showNotification('error', 'Failed to load dashboard data');
+    }
+}
+
+// Load early warning indicators
+async function loadEarlyWarnings() {
+    try {
+        const response = await axios.get('/dashboard/api/early-warning-indicators');
+        const data = response.data;
+        
+        updateEarlyWarningsTable(data);
+        
+    } catch (error) {
+        console.error('Error loading early warnings:', error);
+    }
+}
+
+// Initialize charts
+function initializeCharts() {
+    // Crisis Events Chart
+    const crisisCtx = document.getElementById('crisisChart').getContext('2d');
+    crisisChart = new Chart(crisisCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Crisis Events',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Risk Distribution Chart
+    const riskCtx = document.getElementById('riskChart').getContext('2d');
+    riskChart = new Chart(riskCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['High Risk', 'Moderate Risk', 'Low Risk'],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Load initial chart data
+    loadChartData();
+}
+
+// Load chart data
+async function loadChartData() {
+    try {
+        const response = await axios.get('/dashboard/api/crisis-trends/data?days=7');
+        const data = response.data;
+        
+        // Update crisis events chart
+        if (data.temporalPatterns && data.temporalPatterns.daily) {
+            crisisChart.data.labels = data.temporalPatterns.daily.map(d => d.date);
+            crisisChart.data.datasets[0].data = data.temporalPatterns.daily.map(d => d.count);
+            crisisChart.update();
+        }
+        
+        // Update risk distribution chart
+        if (data.riskDistribution) {
+            riskChart.data.datasets[0].data = [
+                data.riskDistribution.high || 0,
+                data.riskDistribution.moderate || 0,
+                data.riskDistribution.low || 0
+            ];
+            riskChart.update();
+        }
+        
+    } catch (error) {
+        console.error('Error loading chart data:', error);
+    }
+}
+
+// Update alerts display
+function updateAlerts(alerts) {
+    const container = document.getElementById('alertsContainer');
+    container.innerHTML = '';
+    
+    if (alerts.critical > 0) {
+        container.innerHTML += `
+            <div class="col-md-12 mb-2">
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>${alerts.critical} Critical Alerts</strong> require immediate attention
+                </div>
+            </div>
+        `;
+    }
+    
+    if (alerts.warning > 0) {
+        container.innerHTML += `
+            <div class="col-md-12 mb-2">
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>${alerts.warning} Warning Alerts</strong> need review
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Update early warnings table
+function updateEarlyWarningsTable(data) {
+    const container = document.getElementById('earlyWarningsTable');
+    
+    if (data.warningCount === 0) {
+        container.innerHTML = '<p class="text-muted">No early warnings at this time</p>';
+        return;
+    }
+    
+    let html = `
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Risk Level</th>
+                    <th>Indicator</th>
+                    <th>Change</th>
+                    <th>Urgency</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.criticalAlerts.forEach(alert => {
+        html += `
+            <tr class="${alert.urgency === 'HIGH' ? 'table-danger' : ''}">
+                <td>${alert.patientId}</td>
+                <td><span class="badge bg-danger">${alert.riskLevel}</span></td>
+                <td>${alert.indicator}</td>
+                <td>${alert.change}</td>
+                <td><span class="badge bg-${alert.urgency === 'HIGH' ? 'danger' : 'warning'}">${alert.urgency}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="viewPatient('${alert.patientId}')">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Update recent activity table
+function updateRecentActivity(activities) {
+    const container = document.getElementById('recentActivityTable');
+    
+    if (!activities || activities.length === 0) {
+        container.innerHTML = '<p class="text-muted">No recent activity</p>';
+        return;
+    }
+    
+    let html = `
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    activities.forEach(activity => {
+        html += `
+            <tr>
+                <td>${new Date(activity.timestamp).toLocaleTimeString()}</td>
+                <td><span class="badge bg-secondary">${activity.type}</span></td>
+                <td>${activity.description}</td>
+                <td>${activity.user}</td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Helper functions
+function refreshEarlyWarnings() {
+    loadEarlyWarnings();
+    showNotification('info', 'Refreshing early warnings...');
+}
+
+function viewPatient(patientId) {
+    window.location.href = `/dashboard/wellness-trajectories?user_id=${patientId}`;
+}
+
+function showNotification(type, message) {
+    // Simple notification implementation
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                      type === 'warning' ? 'alert-warning' : 
+                      type === 'info' ? 'alert-info' : 'alert-success';
+    
+    const notification = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3" role="alert" style="z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        const alert = document.querySelector('.alert.position-fixed');
+        if (alert) alert.remove();
+    }, 5000);
+}
+</script>
+{% endblock %} 

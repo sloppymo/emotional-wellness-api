@@ -7,22 +7,39 @@ routes, and dependencies.
 """
 
 import logging
+import os
 from structured_logging import setup_logging
 from fastapi import FastAPI, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.security import HTTPBearer
 import uvicorn
 from redis.asyncio import Redis
 from contextlib import asynccontextmanager
+from sqlalchemy import text
+from datetime import datetime
 
 from api.version import API_VERSION
 from api.middleware import RateLimiterMiddleware
 from middleware.ip_whitelist import IPWhitelistMiddleware
-from routers import emotional_state, sessions, users, health, symbolic
+from security.headers import add_security_headers
+from routers import emotional_state, sessions, users, health, symbolic, auth, clinical, clinical_analytics, longitudinal, security, alerts, metrics
 from integration import router as integration_router
+from dashboard import admin_router
 from security.auth import get_api_key
+from api.security import setup_security, get_current_user
 from config.settings import get_settings
+from observability import get_telemetry_manager
+from monitoring.metrics import initialize_metrics_collection
+from monitoring.metrics_collector import start_metrics_collection, stop_metrics_collection, get_metrics_collector
+from monitoring.metrics_storage import get_metrics_storage
+from monitoring.alert_manager import get_alert_manager
+from .middleware.error_handling import error_handling_middleware
+from .middleware.hipaa_compliance import HIPAAComplianceMiddleware
+from .middleware.cors import get_cors_middleware
+from .routers.tasks import router as tasks_router, sio as task_sio
+from .dashboard import dashboard_router
 
 # Setup logging
 logging.basicConfig(
@@ -46,10 +63,34 @@ async def lifespan(app: FastAPI):
         encoding="utf-8",
         decode_responses=True
     )
+    # Initialize alert manager
+    alert_manager = get_alert_manager()
+    await alert_manager.initialize()
+    
+    # Initialize metrics collector
+    metrics_collector = get_metrics_collector()
+    await metrics_collector.initialize()
+    
+    # Initialize metrics storage
+    metrics_storage = get_metrics_storage()
+    await metrics_storage.initialize()
+    
+    # Start metrics collection
+    await start_metrics_collection()
+    
     yield
+    
     # Shutdown
-    if redis_client:
-        await redis_client.close()
+    logger.info("Shutting down Emotional Wellness API")
+    
+    # Stop metrics collection
+    await stop_metrics_collection()
+    
+    # Close alert manager
+    await alert_manager.close()
+    
+    # Close metrics storage
+    await metrics_storage.close()
 
 app = FastAPI(
     title="Emotional Wellness Companion API",
@@ -60,6 +101,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Set up JWT security middleware
+setup_security(app)
+
+# Add security headers middleware
+add_security_headers(app)
+
 # Add rate limiter middleware
 app.add_middleware(
     RateLimiterMiddleware,
@@ -68,6 +115,9 @@ app.add_middleware(
     unauthenticated_limit=settings.RATE_LIMIT_UNAUTHENTICATED,
     window_seconds=settings.RATE_LIMIT_WINDOW_SECONDS,
 )
+
+# Initialize Prometheus metrics collection
+initialize_metrics_collection(app)
 
 # CORS configuration - tightly controlled for HIPAA compliance
 app.add_middleware(
@@ -94,12 +144,30 @@ async def add_request_id_and_audit(request: Request, call_next):
     # Log request metadata (no content)
     logger.info(f"Request {request_id}: {request.method} {request.url.path}")
     
+    # Get telemetry manager if available
+    telemetry = get_telemetry_manager()
+    
     response = await call_next(request)
+    
+    # Record API request metrics
+    if telemetry:
+        telemetry.record_api_request(
+            endpoint=request.url.path,
+            method=request.method,
+            status_code=response.status_code
+        )
     
     # Add response headers
     response.headers["X-API-Version"] = API_VERSION
     if request_id:
         response.headers["X-Request-ID"] = request_id
+        
+    # Add trace context for distributed tracing if available
+    if telemetry:
+        trace_context = telemetry.get_trace_context()
+        for header, value in trace_context.items():
+            response.headers[header] = value
+    
     return response
 
 # Security exception handler
@@ -114,16 +182,24 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 # Register routers
 app.include_router(health.router, tags=["System"])
-app.include_router(emotional_state.router, tags=["Emotional Processing"], dependencies=[Depends(get_api_key)])
-app.include_router(sessions.router, tags=["Sessions"], dependencies=[Depends(get_api_key)])
-app.include_router(integration_router, tags=["SYLVA-WREN Integration"])
-app.include_router(users.router, tags=["Users"], dependencies=[Depends(get_api_key)])
-# Add symbolic router with prefix
-app.include_router(
-    symbolic.router,
-    prefix="/symbolic",
-    dependencies=[Depends(get_api_key)]
-)
+app.include_router(auth.router, tags=["Authentication"])
+app.include_router(alerts.router, tags=["Alerts"])
+app.include_router(metrics.router, tags=["Metrics"])
+app.include_router(admin_router.router, tags=["Admin"])
+
+# Routes with JWT security
+secure_routes = [
+    app.include_router(emotional_state.router, tags=["Emotional Processing"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(sessions.router, tags=["Sessions"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(users.router, prefix="/users", tags=["Users"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(symbolic.router, prefix="/symbolic", tags=["Symbolic Analysis"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(integration_router, prefix="/integrate", tags=["Integration"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(clinical.router, prefix="/clinical", tags=["Clinical Portal"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(clinical_analytics.router, tags=["Clinical Analytics"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(longitudinal.router, tags=["Longitudinal Analysis"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
+    app.include_router(security.router, tags=["Security"], dependencies=[Depends(get_current_user), Depends(get_api_key)])
+]
+
 app.include_router(
     sessions.router, 
     prefix="/v1/session", 
@@ -156,6 +232,72 @@ async def root():
         "version": API_VERSION,
         "status": "operational",
         "docs": "/docs"
+    }
+
+# Initialize Socket.IO app
+socket_app = socketio.ASGIApp(task_sio, app)
+
+# Add middleware
+app.middleware("http")(error_handling_middleware)
+app.add_middleware(HIPAAComplianceMiddleware)
+app.add_middleware(get_cors_middleware())
+
+# Include routers
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(assessments_router)
+app.include_router(interventions_router)
+app.include_router(tasks_router)
+app.include_router(dashboard_router)
+
+# Health check endpoint with detailed status
+@app.get("/health", tags=["health"])
+async def health_check():
+    """Enhanced health check endpoint with service status."""
+    try:
+        # Check database connectivity
+        async with get_async_session() as session:
+            await session.execute(text("SELECT 1"))
+            db_status = "healthy"
+    except Exception as e:
+        logger.error(f"Database health check failed: {str(e)}")
+        db_status = "unhealthy"
+    
+    try:
+        # Check Redis connectivity
+        redis_client = await get_redis_client()
+        await redis_client.ping()
+        redis_status = "healthy"
+    except Exception as e:
+        logger.error(f"Redis health check failed: {str(e)}")
+        redis_status = "unhealthy"
+    
+    try:
+        # Check Celery workers
+        from .tasks import celery_app
+        inspector = celery_app.control.inspect()
+        stats = inspector.stats()
+        celery_status = "healthy" if stats else "unhealthy"
+        worker_count = len(stats) if stats else 0
+    except Exception as e:
+        logger.error(f"Celery health check failed: {str(e)}")
+        celery_status = "unhealthy"
+        worker_count = 0
+    
+    overall_status = "healthy" if all(
+        status == "healthy" for status in [db_status, redis_status, celery_status]
+    ) else "degraded"
+    
+    return {
+        "status": overall_status,
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": settings.VERSION,
+        "services": {
+            "database": db_status,
+            "redis": redis_status,
+            "celery": celery_status,
+            "worker_count": worker_count
+        }
     }
 
 if __name__ == "__main__":

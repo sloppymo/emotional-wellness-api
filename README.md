@@ -1,208 +1,162 @@
 # Emotional Wellness API
 
-A HIPAA-compliant emotional wellness companion API featuring advanced symbolic processing, rate limiting, and narrative intelligence.
+A comprehensive FastAPI-based backend system for mental health and emotional wellness support, featuring clinical assessment, intervention management, real-time analytics, and an interactive clinical dashboard.
 
-## 🌟 Features
+## 🌟 Key Features
 
-### Core Systems
+### Core Functionality
+- **Clinical Assessment Engine**: Advanced risk assessment with ML-based analysis
+- **Intervention Management**: Protocol-based intervention system with state tracking
+- **Crisis Response**: Automated escalation and emergency protocols
+- **User Management**: Secure authentication with role-based access control
 
-- **🏛️ SYLVA-WREN Integration**: Advanced symbolic processing and narrative engine
-- **🛡️ Enterprise Rate Limiting**: Zero-trust security with HIPAA compliance
-- **🎭 CANOPY Metaphor Extraction**: AI-powered symbolic meaning analysis
-- **🌳 ROOT Archetype Analysis**: Jungian archetype mapping and analysis
-- **🍃 MOSS Crisis Detection**: Real-time safety assessment and intervention
-- **💎 MARROW Safety Protocols**: Multi-layered emotional safety systems
+### Advanced Features (v2.0)
+- **Background Task Processing**: Celery-based distributed task queue for analytics
+- **Clinical Dashboard**: Interactive web interface for clinicians with real-time visualizations
+- **Longitudinal Monitoring**: Track patient wellness trajectories over time
+- **Early Warning System**: AI-powered detection of deteriorating mental health patterns
+- **Real-time Updates**: WebSocket support for live notifications and updates
 
-### Advanced Capabilities
+### Technical Features
+- **HIPAA Compliant**: Full audit logging and data encryption
+- **Scalable Architecture**: Async FastAPI with PostgreSQL and Redis
+- **Comprehensive Testing**: Unit, integration, and workflow tests
+- **API Documentation**: Auto-generated OpenAPI/Swagger docs
+- **Error Handling**: Consistent error responses with request tracking
 
-- **Zero-Trust Security**: Context-aware rate limiting with trust assessment
-- **Business Intelligence**: Revenue impact analysis and customer journey mapping
-- **Observability 2.0**: SLI/SLO management with abuse pattern detection
-- **Claude 3 Haiku Integration**: Advanced metaphor extraction with fallback systems
-- **Redis Caching**: Distributed caching with HIPAA-compliant PHI protection
-- **Real-time Monitoring**: OpenTelemetry tracing and Prometheus metrics
+## 🚨 Monitoring & Admin Dashboard
 
-## 🏗️ Architecture
+The Emotional Wellness API includes a robust, extensible monitoring and admin dashboard system for real-time and historical observability:
 
-### SYLVA Adapter System
+- **Admin Dashboard UI**: Secure, role-based dashboards for system health, alerts, metrics, background tasks, and integrations.
+- **Metrics & Alerts APIs**: REST endpoints for listing, filtering, and exporting all system metrics and alerts.
+- **Historical Metrics Storage**: Efficient time-series storage and aggregation with Redis TimeSeries.
+- **Advanced Filtering & Export**: UI and API support for aggregation, label-based filtering, custom date ranges, and CSV/JSON export.
+- **Extensible**: Add new metrics, integrations, and alert rules with minimal code changes.
 
-The SYLVA (Symbolic Language and Visualization Architecture) adapter system provides a standardized interface for symbolic processing:
-
-```
-src/symbolic/adapters/
-├── base.py              # Abstract base adapter with caching & error handling
-├── canopy_adapter.py    # Metaphor extraction adapter  
-├── root_adapter.py      # Archetype analysis adapter
-├── moss_adapter.py      # Crisis detection adapter
-├── marrow_adapter.py    # Safety protocol adapter
-└── factory.py           # Adapter factory pattern
-```
-
-### Enhanced CANOPY System
-
-Advanced metaphor extraction with multiple processing layers:
-
-```
-src/symbolic/canopy/
-├── metaphor_extraction.py  # Enhanced extraction with Claude 3 Haiku
-├── prompt_templates.py     # Structured LLM prompts
-├── fallback_system.py      # Rule-based fallback extraction
-└── caching.py             # Redis-based distributed caching
-```
-
-### Rate Limiting Architecture
-
-Enterprise-grade rate limiting with zero-trust security:
-
-```
-src/api/middleware/
-├── rate_limiter.py           # Core rate limiting middleware
-├── zero_trust_security.py    # Zero-trust assessment system
-├── business_intelligence.py  # BI analytics and journey mapping
-├── observability_2.py        # Advanced observability and monitoring
-└── multi_tenancy.py          # Multi-tenant support
-```
+See [MONITORING.md](./MONITORING.md) for full documentation and operational details.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
 - Python 3.11+
-- Redis 6.0+
-- PostgreSQL 13+ (for production)
-- Docker (optional)
+- PostgreSQL 14+
+- Redis 6+
+- Docker & Docker Compose (optional)
 
 ### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/sloppymo/emotional-wellness-api.git
-   cd emotional-wellness-api
-   ```
+```bash
+git clone https://github.com/yourusername/emotional-wellness-api.git
+cd emotional-wellness-api
+```
 
 2. **Set up virtual environment**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
 3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Environment configuration**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Initialize database**
-   ```bash
-   alembic upgrade head
-   ```
-
-6. **Start the API**
-   ```bash
-   uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```env
-# API Configuration
-DEBUG=true
-SECRET_KEY=your-secret-key-here
-JWT_SECRET_KEY=your-jwt-secret
-
-# Database
-DATABASE_URL=postgresql://user:password@localhost/emotional_wellness
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# External Services
-ANTHROPIC_API_KEY=your-anthropic-key
-
-# HIPAA Compliance
-ENCRYPTION_KEY=your-encryption-key
-AUDIT_LOG_LEVEL=INFO
+```bash
+pip install -r requirements.txt
+pip install -r requirements-dev.txt  # For development
 ```
 
-### Rate Limiting Configuration
-
-```python
-RATE_LIMITS = {
-    "PHI_OPERATION": {"auth": 100, "unauth": 10, "window": 3600},
-    "CRISIS_INTERVENTION": {"auth": 1000, "unauth": 50, "window": 3600},
-    "AUTHENTICATED": {"auth": 500, "unauth": 100, "window": 3600},
-    "PUBLIC": {"auth": 200, "unauth": 50, "window": 3600}
-}
+4. **Configure environment**
+```bash
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-## 📖 API Documentation
+5. **Run database migrations**
+```bash
+alembic upgrade head
+```
 
-### CANOPY Metaphor Extraction
+6. **Start services**
+```bash
+# Start Redis
+redis-server
 
-```python
-POST /api/v1/symbolic/extract
-{
-    "text": "I feel like I'm drowning in responsibilities",
-    "context": {
-        "session_type": "therapy",
-        "previous_symbols": ["water", "ocean"]
+# Start Celery worker (in a new terminal)
+celery -A src.tasks.celery_app worker --loglevel=info
+
+# Start Celery beat (in a new terminal)
+celery -A src.tasks.celery_app beat --loglevel=info
+
+# Start the API
+uvicorn src.main:app --reload
+```
+
+### Docker Deployment
+
+```bash
+docker-compose up -d
+```
+
+## 📊 Clinical Dashboard
+
+Access the clinical dashboard at `http://localhost:8000/dashboard` after starting the server.
+
+### Dashboard Features
+- **Crisis Trends**: Real-time visualization of crisis events and patterns
+- **Risk Stratification**: Patient cohort analysis by risk levels
+- **Wellness Trajectories**: Individual and cohort wellness tracking
+- **Intervention Outcomes**: Effectiveness metrics and protocol performance
+- **Early Warnings**: Automated alerts for at-risk patients
+
+### Dashboard Requirements
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- JavaScript enabled
+- Clinician or admin role authorization
+
+## 🔧 API Usage
+
+### Authentication
+
+```bash
+# Register a new user
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "securepassword"}'
+
+# Login
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user@example.com", "password": "securepassword"}'
+```
+
+### Submit Assessment
+
+```bash
+curl -X POST http://localhost:8000/api/v1/assessments/submit \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_responses": {
+      "mood": 3,
+      "anxiety": 7,
+      "sleep_quality": 4,
+      "stress_level": 8
     }
-}
+  }'
 ```
 
-Response:
-```json
-{
-    "primary_symbol": "water",
-    "archetype": "self",
-    "alternative_symbols": ["ocean", "current", "depth"],
-    "valence": -0.6,
-    "arousal": 0.8,
-    "metaphors": [
-        {
-            "text": "drowning",
-            "symbol": "overwhelm",
-            "confidence": 0.9
-        }
-    ],
-    "confidence": 0.85
-}
+### Trigger Background Analysis
+
+```bash
+# Start crisis trend analysis
+curl -X POST http://localhost:8000/api/v1/tasks/analyze/crisis-trends \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"period": "weekly"}'
+
+# Check task status
+curl -X GET http://localhost:8000/api/v1/tasks/status/TASK_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
-
-### Zero-Trust Security Assessment
-
-The system automatically evaluates trust based on:
-
-- **Device Context**: Known devices, security status, fingerprinting
-- **Location Context**: Geographic validation, VPN detection, approved facilities
-- **Behavioral Context**: Usage patterns, anomaly detection, symbolic evolution
-- **Authentication Context**: MFA status, role verification, session security
-
-## 🏥 HIPAA Compliance
-
-### Data Protection
-
-- **Encryption at Rest**: AES-256 encryption for all PHI
-- **Encryption in Transit**: TLS 1.3 for all API communications  
-- **Access Controls**: Role-based access with zero-trust principles
-- **Audit Logging**: Comprehensive audit trails for all PHI access
-- **Data Minimization**: PHI hashing and anonymization where possible
-
-### Crisis Intervention
-
-Special handling for mental health emergencies:
-
-- **Zero Rate Limiting**: Crisis counselors get unlimited access during emergencies
-- **Priority Routing**: Crisis endpoints bypass normal queuing
-- **Safety Escalation**: Automatic escalation for detected safety concerns
-- **Audit Compliance**: Enhanced logging for crisis interventions
 
 ## 🧪 Testing
 
@@ -214,32 +168,60 @@ pytest
 pytest --cov=src --cov-report=html
 
 # Run specific test categories
-pytest -m "unit"
-pytest -m "integration"
-pytest -m "hipaa_compliance"
+pytest tests/unit/
+pytest tests/integration/
+pytest tests/test_veluria/
 ```
 
-## 📊 Monitoring
+## 📚 Documentation
 
-### Health Checks
+- **API Documentation**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **Dashboard Guide**: See `docs/dashboard_guide.md`
+- **Development Guide**: See `docs/development.md`
+- **Deployment Guide**: See `docs/deployment.md`
 
-- `GET /health` - Basic health check
-- `GET /health/detailed` - Comprehensive system status
-- `GET /health/adapters` - SYLVA adapter status
+## 🏗️ Architecture
 
-### Metrics
+```
+src/
+├── api/              # API endpoints and routers
+├── clinical/         # Clinical domain logic
+├── dashboard/        # Web dashboard interface
+├── database/         # Database models and sessions
+├── middleware/       # FastAPI middleware
+├── models/           # SQLAlchemy models
+├── security/         # Authentication and authorization
+├── symbolic/         # VELURIA protocol system
+├── tasks/            # Background task definitions
+└── main.py          # Application entry point
+```
 
-- **Prometheus**: `/metrics` endpoint for monitoring
-- **Custom Metrics**: Symbolic processing, rate limiting, security events
-- **Business Intelligence**: Revenue impact, user journey analytics
+## 🔒 Security Features
 
-### Observability
+- JWT-based authentication with refresh tokens
+- Role-based access control (RBAC)
+- Request rate limiting
+- HIPAA-compliant audit logging
+- Encrypted data at rest and in transit
+- Input validation and sanitization
+- SQL injection prevention
+- XSS protection
 
-- **OpenTelemetry**: Distributed tracing across all components
-- **Structured Logging**: HIPAA-compliant logging with correlation IDs
-- **Real-time Dashboards**: Grafana dashboards for operations
+## 🚀 Performance Features
+
+- Async/await throughout
+- Connection pooling for PostgreSQL
+- Redis caching for frequently accessed data
+- Background task processing for heavy computations
+- Optimized database queries with proper indexing
+- Horizontal scaling support
 
 ## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -247,53 +229,62 @@ pytest -m "hipaa_compliance"
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Development Standards
+### Code Style
 
-- **Code Quality**: Black formatting, flake8 linting, type hints
-- **Testing**: 85%+ test coverage required
-- **Documentation**: Comprehensive docstrings and API documentation
-- **HIPAA Compliance**: All changes must maintain HIPAA compliance
+- Follow PEP 8
+- Use type hints
+- Write docstrings for all public functions
+- Add tests for new features
+- Run `black` and `isort` before committing
 
-## 📜 License
+## 📈 Monitoring
+
+### Health Check
+```bash
+curl http://localhost:8000/health
+```
+
+### Metrics
+- Prometheus metrics available at `/metrics`
+- Grafana dashboards for visualization
+- Custom alerts for critical events
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Database connection errors**
+   - Check PostgreSQL is running
+   - Verify database credentials in `.env`
+   - Ensure database exists
+
+2. **Redis connection errors**
+   - Check Redis is running
+   - Verify Redis URL in `.env`
+
+3. **Celery worker issues**
+   - Ensure Redis is accessible
+   - Check worker logs for errors
+   - Verify task imports
+
+See [Troubleshooting Guide](docs/troubleshooting.md) for more details.
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔒 Security
-
-For security concerns, please email security@example.com instead of using the issue tracker.
-
 ## 🙏 Acknowledgments
 
-- **Anthropic Claude 3 Haiku** for advanced language processing
-- **FastAPI** for the robust web framework
-- **Redis** for distributed caching and rate limiting
-- **OpenTelemetry** for observability infrastructure
+- FastAPI team for the excellent framework
+- Anthropic for Claude AI integration
+- All contributors and testers
+
+## 📞 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/emotional-wellness-api/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/emotional-wellness-api/discussions)
 
 ---
 
-## 🚧 Development Status
-
-### ✅ Completed
-- SYLVA Adapter System (base, CANOPY adapter)
-- Enhanced CANOPY Metaphor Extraction
-- Zero-Trust Rate Limiting
-- Business Intelligence Analytics
-- Advanced Observability System
-
-### 🔄 In Progress
-- ROOT Archetype Analysis Adapter
-- MOSS Crisis Detection Adapter
-- MARROW Safety Protocol Adapter
-- WREN Narrative Engine
-- Comprehensive Test Suite
-
-### 📋 Planned
-- Cultural Symbolic Libraries
-- Narrative Memory Persistence
-- Scene State Transition Logic
-- Multi-language Support
-- Mobile SDK
-
----
-
-Built with ❤️ for emotional wellness and mental health support.
+Built with ❤️ for mental health support

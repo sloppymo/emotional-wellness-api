@@ -1,16 +1,31 @@
 """
 SYLVA-WREN Coordinator: Central integration layer for symbolic (SYLVA) and narrative (WREN) AI frameworks.
 Orchestrates emotional state fusion, safety protocols, and unified API responses.
+Integrates with MOSS crisis detection and intervention system.
 """
 import logging
 import uuid
 from datetime import datetime
-from typing import Optional, Union, Any
+from typing import Dict, List, Optional, Any, Union
+
+# Import MOSS adapter
+try:
+    from .moss_adapter import get_moss_adapter
+    MOSS_AVAILABLE = True
+except ImportError:
+    MOSS_AVAILABLE = False
+
+# Import PHI logger
+try:
+    from structured_logging.phi_logger import log_phi_access as phi_logger_access
+    PHI_LOGGER_AVAILABLE = True
+except ImportError:
+    PHI_LOGGER_AVAILABLE = False
 
 # Import models - these should be available in any environment
 from integration.models import (
     EmotionalInput, CrisisAssessment, NarrativeScene, SymbolicResponse, IntegratedResponse, EmotionalState,
-    UserContext, SymbolicState, NarrativeState, IntegratedState, SceneType
+    UserContext, SymbolicState, NarrativeState, IntegratedState, SceneType, ProcessedEmotionalState
 )
 
 # Try importing optional dependencies, but don't fail if they're not available
@@ -43,60 +58,77 @@ class SylvaWrenCoordinator:
     """
     def __init__(self, redis: Optional[Redis] = None):
         self.redis = redis
+        # Initialize MOSS adapter if available
+        self.moss_adapter = get_moss_adapter() if MOSS_AVAILABLE else None
+        
         # self.metaphor_extractor = MetaphorExtractor()
         # self.archetype_analyzer = ArchetypeAnalyzer()
-        # self.crisis_evaluator = CrisisEvaluator()
         # self.scene_state_machine = SceneStateMachine()
         # self.narrative_memory = NarrativeMemory()
 
-    async def process_emotional_input(self, input_data: EmotionalInput) -> IntegratedResponse:
+    async def process_emotional_input(self, input_data: EmotionalInput) -> ProcessedEmotionalState:
         """
         Main entrypoint: process user emotional input, synchronize symbolic/narrative state, and generate response.
         """
         try:
-            # --- Symbolic Processing (SYLVA) ---
-            # metaphors = await self.metaphor_extractor.extract(input_data.text_content)
-            # archetype_analysis = await self.archetype_analyzer.analyze(input_data)
-            # crisis = await self.crisis_evaluator.assess(input_data)
-            # For now, use placeholders:
-            metaphors = []
-            archetype_analysis = None
-            crisis = None
-            symbolic_state = SymbolicState(metaphors=metaphors, dominant_archetypes=[], themes=[], crisis_indicators=crisis)
-
-            # --- Narrative Processing (WREN) ---
-            # narrative_scene = await self.scene_state_machine.next_scene(symbolic_state, input_data)
-            # For now, use placeholder:
-            narrative_scene = NarrativeScene(
-                id="scene-1",
-                type=SceneType.EXPLORATORY,
-                current_state={},
-                available_actions=[],
-                narrative_content="Welcome to your wellness journey.",
-                symbolic_elements=[],
-                emotional_targets={}
-            )
-            narrative_state = NarrativeState(current_scene=narrative_scene)
-
-            # --- State Synchronization ---
+            logger.info(f"Processing emotional input for user {input_data.user_id}")
+            
+            # Step 1: Log PHI access for compliance
+            await self.log_phi_access(input_data.user_id, "process_input")
+            
+            # Step 2: Extract symbolic elements (archetypes, metaphors)
+            # symbolic_state = await self.metaphor_extractor.extract(input_data.text)
+            symbolic_state = SymbolicState()  # Placeholder
+            
+            # Step 3: Update narrative state machine
+            # narrative_state = await self.scene_state_machine.process(input_data.text, input_data.metadata)
+            narrative_state = NarrativeState()  # Placeholder
+            
+            # Step 4: Perform crisis detection using MOSS if available
+            user_context = UserContext(user_id=input_data.user_id)
+            
+            if self.moss_adapter:
+                # Use MOSS for advanced crisis detection
+                crisis = await self.moss_adapter.assess_crisis_risk(
+                    emotional_input=input_data,
+                    user_id=input_data.user_id,
+                    user_context={"symbolic_state": symbolic_state.dict() if hasattr(symbolic_state, "dict") else {}}
+                )
+                
+                # Get crisis response from MOSS if needed
+                crisis_response = None
+                if crisis.level > 1:  # More than lowest severity
+                    crisis_response = await self.moss_adapter.generate_crisis_response(
+                        crisis_assessment=crisis,
+                        user_name=input_data.metadata.get("user_name")
+                    )
+            else:
+                # Fallback to basic crisis detection
+                crisis = CrisisAssessment()  # Placeholder
+            
+            # Step 5: Handle crisis if detected
+            if crisis.level > 0:
+                await self.handle_crisis(crisis, user_context)
+            
+            # Step 6: Synchronize states for unified response
             integrated_state = await self.synchronize_states(symbolic_state, narrative_state)
-
-            # --- Safety Orchestration ---
-            if crisis:
-                await self.handle_crisis(crisis, input_data.user_context)
-
-            # --- Unified Response Generation ---
-            response = IntegratedResponse(
-                response_text="Your emotional state has been processed. Welcome to your wellness journey.",
-                symbolic_elements={},
-                narrative_elements={},
-                emotional_guidance=None,
-                crisis_response=None,
-                next_actions=[]
+            
+            # Step 7: Generate response based on integrated state and crisis assessment
+            response = "This is a placeholder response based on emotional processing."  # Placeholder
+            
+            # If we have a crisis response from MOSS, use it
+            if crisis.level > 1 and 'crisis_response' in locals() and crisis_response:
+                response = crisis_response
+            
+            # Return processed state
+            return ProcessedEmotionalState(
+                user_id=input_data.user_id,
+                response_text=response,
+                symbolic_state=symbolic_state,
+                narrative_state=narrative_state,
+                crisis_detected=(crisis.level > 0),
+                crisis_assessment=crisis if crisis.level > 0 else None
             )
-            # --- Logging and PHI Compliance ---
-            await self.log_phi_access(input_data.user_context.user_id, action="process_emotional_input")
-            logger.info("Processed emotional input for user: %s", input_data.user_context.user_id)
             return response
         except ValidationError as ve:
             logger.error("Validation error: %s", ve)
@@ -262,6 +294,18 @@ class SylvaWrenCoordinator:
             additional_context: Optional dictionary with supplementary audit information
         """
         try:
+            # Use the PHI logger if available
+            if PHI_LOGGER_AVAILABLE:
+                await phi_logger_access(
+                    user_id=user_id,
+                    action=action,
+                    system_component="SYLVA-WREN-Coordinator",
+                    data_elements=["emotional_state", "crisis_assessment"],
+                    additional_context=additional_context
+                )
+                return
+                
+            # Fallback implementation if PHI logger is not available
             # Create a structured audit record that meets HIPAA requirements
             audit_record = {
                 "timestamp": datetime.utcnow().isoformat(),
@@ -278,10 +322,6 @@ class SylvaWrenCoordinator:
             # Add any additional context if provided
             if additional_context:
                 audit_record["context"] = additional_context
-            
-            # In production, this would use the structured_logging module with secure storage
-            # from structured_logging import phi_logger
-            # await phi_logger.log_access(audit_record)
             
             # For now, use standard logging but omit sensitive details
             logger.info(

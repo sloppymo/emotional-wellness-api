@@ -1,0 +1,284 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Metrics Dashboard</h2>
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label for="metricType" class="form-label">Metric</label>
+      <select id="metricType" class="form-select"></select> <!-- Dynamically loaded -->
+    </div>
+    <div class="col-md-4">
+      <label for="timeRange" class="form-label">Time Range</label>
+      <select id="timeRange" class="form-select">
+        <option value="hour">Last Hour</option>
+        <option value="day">Last 24 Hours</option>
+        <option value="week">Last 7 Days</option>
+        <option value="month">Last 30 Days</option>
+        <option value="custom">Custom Range</option>
+      </select>
+      <div id="customRange" class="mt-2" style="display:none;">
+        <input type="datetime-local" id="customStart" class="form-control mb-1" placeholder="Start">
+        <input type="datetime-local" id="customEnd" class="form-control" placeholder="End">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label for="aggregation" class="form-label">Aggregation</label>
+      <select id="aggregation" class="form-select">
+        <option value="raw">Raw</option>
+        <option value="hourly">Hourly</option>
+        <option value="daily">Daily</option>
+        <option value="monthly">Monthly</option>
+      </select>
+      <div class="d-flex gap-2 mt-2">
+        <button id="refreshBtn" class="btn btn-primary flex-fill">Refresh</button>
+        <button id="exportCsvBtn" class="btn btn-outline-secondary flex-fill">Export CSV</button>
+        <button id="exportJsonBtn" class="btn btn-outline-secondary flex-fill">Export JSON</button>
+      </div>
+    </div>
+  </div>
+  <div class="card mb-4">
+    <div class="card-body">
+      <canvas id="metricsChart" height="80"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">Recent Metric Values</div>
+    <div class="card-body p-0">
+      <table class="table table-striped mb-0" id="metricsTable">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let allMetrics = [];
+let allLabels = {};
+
+async function loadMetricsList() {
+  const resp = await fetch('/metrics');
+  if (!resp.ok) return;
+  const data = await resp.json();
+  allMetrics = data.metrics;
+  const metricType = document.getElementById('metricType');
+  metricType.innerHTML = '';
+  allMetrics.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    opt.textContent = m.name + (m.labels && Object.keys(m.labels).length ? ' [' + Object.entries(m.labels).map(([k,v])=>`${k}:${v}`).join(', ') + ']' : '');
+    metricType.appendChild(opt);
+  });
+  // Load available labels for filtering
+  allLabels = {};
+  allMetrics.forEach(m => {
+    Object.entries(m.labels).forEach(([k,v]) => {
+      if (!allLabels[k]) allLabels[k] = new Set();
+      allLabels[k].add(v);
+    });
+  });
+  renderLabelFilters();
+  // Add change listeners for label filters
+  setTimeout(() => {
+    document.querySelectorAll('[id^="labelFilter_"]').forEach(el => {
+      el.addEventListener('change', updateDashboard);
+    });
+  }, 0);
+}
+
+function renderLabelFilters() {
+  const filterDiv = document.getElementById('labelFilters');
+  filterDiv.innerHTML = '';
+  Object.entries(allLabels).forEach(([label, values]) => {
+    const group = document.createElement('div');
+    group.className = 'mb-2';
+    const labelElem = document.createElement('label');
+    labelElem.textContent = label;
+    labelElem.className = 'form-label';
+    group.appendChild(labelElem);
+    const select = document.createElement('select');
+    select.className = 'form-select';
+    select.id = `labelFilter_${label}`;
+    select.innerHTML = `<option value="">(Any)</option>` + Array.from(values).map(v => `<option value="${v}">${v}</option>`).join('');
+    group.appendChild(select);
+    filterDiv.appendChild(group);
+  });
+}
+
+  blue: 'rgba(54, 162, 235, 0.7)',
+  red: 'rgba(255, 99, 132, 0.7)',
+  green: 'rgba(75, 192, 192, 0.7)',
+  orange: 'rgba(255, 159, 64, 0.7)'
+};
+
+const metricTypeMap = {
+  'system.cpu_percent': {label: 'CPU Usage (%)', color: chartColors.blue},
+  'system.memory_percent': {label: 'Memory Usage (%)', color: chartColors.green},
+  'system.disk_percent': {label: 'Disk Usage (%)', color: chartColors.orange},
+  'api.request_rate': {label: 'API Request Rate', color: chartColors.blue},
+  'api.error_rate': {label: 'API Error Rate', color: chartColors.red},
+  'integration.moss.availability': {label: 'MOSS Availability', color: chartColors.green},
+  'integration.moss.latency': {label: 'MOSS Latency (ms)', color: chartColors.orange},
+};
+
+function getTimeRange(range) {
+  const now = new Date();
+  let start;
+  switch(range) {
+    case 'hour':
+      start = new Date(now.getTime() - 60*60*1000);
+      break;
+    case 'day':
+      start = new Date(now.getTime() - 24*60*60*1000);
+      break;
+    case 'week':
+      start = new Date(now.getTime() - 7*24*60*60*1000);
+      break;
+    case 'month':
+      start = new Date(now.getTime() - 30*24*60*60*1000);
+      break;
+    default:
+      start = new Date(now.getTime() - 60*60*1000);
+  }
+  return {start: start.toISOString(), end: now.toISOString()};
+}
+
+let metricsChart;
+
+function getSelectedLabels() {
+  const filters = {};
+  Object.keys(allLabels).forEach(label => {
+    const val = document.getElementById(`labelFilter_${label}`)?.value;
+    if (val) filters[label] = val;
+  });
+  return filters;
+}
+
+async function fetchMetricData(metric, range, aggregation, customStart, customEnd) {
+  let start, end;
+  if (range === 'custom') {
+    start = customStart;
+    end = customEnd;
+  } else {
+    const tr = getTimeRange(range);
+    start = tr.start;
+    end = tr.end;
+  }
+  let url = `/metrics/${metric}?start_time=${encodeURIComponent(start)}&end_time=${encodeURIComponent(end)}&aggregation=${aggregation}`;
+  const labels = getSelectedLabels();
+  Object.entries(labels).forEach(([k,v]) => {
+    url += `&label_${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
+  });
+  const resp = await fetch(url);
+  if (!resp.ok) return null;
+  return await resp.json();
+}
+
+function renderChart(data, metric) {
+  const ctx = document.getElementById('metricsChart').getContext('2d');
+  const color = metricTypeMap[metric]?.color || chartColors.blue;
+  const label = metricTypeMap[metric]?.label || metric;
+  const labels = data.data_points.map(dp => (new Date(dp.timestamp)).toLocaleString());
+  const values = data.data_points.map(dp => dp.value);
+  if (metricsChart) metricsChart.destroy();
+  metricsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: label,
+        data: values,
+        fill: false,
+        borderColor: color,
+        backgroundColor: color,
+        tension: 0.2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {legend: {display: true}},
+      scales: {x: {title: {display: true, text: 'Time'}}, y: {beginAtZero: true}}
+    }
+  });
+}
+
+function renderTable(data) {
+  const tbody = document.querySelector('#metricsTable tbody');
+  tbody.innerHTML = '';
+  data.data_points.slice(-20).reverse().forEach(dp => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${(new Date(dp.timestamp)).toLocaleString()}</td><td>${dp.value}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateDashboard() {
+  const metric = document.getElementById('metricType').value;
+  const range = document.getElementById('timeRange').value;
+  const aggregation = document.getElementById('aggregation').value;
+  let customStart = document.getElementById('customStart')?.value;
+  let customEnd = document.getElementById('customEnd')?.value;
+  if (range !== 'custom') { customStart = customEnd = undefined; }
+  const data = await fetchMetricData(metric, range, aggregation, customStart, customEnd);
+  if (data) {
+    renderChart(data, metric);
+    renderTable(data);
+    window._lastMetricData = data;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', updateDashboard);
+document.getElementById('metricType').addEventListener('change', updateDashboard);
+document.getElementById('timeRange').addEventListener('change', function() {
+  const show = this.value === 'custom';
+  document.getElementById('customRange').style.display = show ? '' : 'none';
+  updateDashboard();
+});
+document.getElementById('aggregation').addEventListener('change', updateDashboard);
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadMetricsList();
+  updateDashboard();
+});
+
+// Export functions
+function exportCSV(data) {
+  const rows = [['timestamp','value']].concat(data.data_points.map(dp => [dp.timestamp, dp.value]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${data.name}_metrics.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function exportJSON(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${data.name}_metrics.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  if (window._lastMetricData) exportCSV(window._lastMetricData);
+});
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  if (window._lastMetricData) exportJSON(window._lastMetricData);
+});
+</script>
+<div id="labelFilters" class="mt-4"></div>
+
+{% endblock %}

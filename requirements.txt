@@ -19,11 +19,12 @@ cryptography==41.0.3
 authlib==1.2.1
 
 # NLP and Symbolic Processing
-anthropic==0.4.0  # For Claude integration
+anthropic==0.4.1  # For Claude integration
 numpy==2.2.6
 scikit-learn==1.7.0
 nltk==3.8.1
-transformers==4.33.1
+transformers==4.39.3
+tokenizers==0.15.2
 
 # Testing
 pytest==7.4.1
@@ -37,8 +38,7 @@ opentelemetry-api==1.20.0
 opentelemetry-sdk==1.20.0
 
 # HIPAA Compliance and Audit
-pyca==2.1.0
-pgaudit-client==0.5.0  # Simulated dependency, use real package if available
+# pgaudit-client==0.5.0  # Simulated dependency, use real package if available
 
 # DevOps
 gunicorn==21.2.0
@@ -48,3 +48,11 @@ python-terraform==0.10.1
 # Documentation
 mkdocs==1.5.2
 mkdocs-material==9.2.6
+
+# Background Task Processing
+celery==5.3.1  # Distributed task queue
+flower==2.0.1  # Real-time Celery monitoring
+kombu==5.3.1  # Messaging library for Celery
+
+# WebSockets for real-time updates
+python-socketio==5.9.0  # Socket.IO server

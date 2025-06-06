@@ -1,0 +1,466 @@
+{% extends "admin/base.html" %}
+
+{% block extra_css %}
+<style>
+    .alert-card {
+        border-left: 4px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .alert-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .alert-info {
+        border-left-color: var(--info-color);
+    }
+    
+    .alert-warning {
+        border-left-color: var(--warning-color);
+    }
+    
+    .alert-critical {
+        border-left-color: var(--danger-color);
+    }
+    
+    .alert-emergency {
+        border-left-color: #7d3c98;
+    }
+    
+    .alert-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .alert-actions button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .alert-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 10px;
+    }
+    
+    .alert-filters {
+        background-color: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .filter-label {
+        font-weight: 500;
+        min-width: 80px;
+    }
+    
+    .filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .filter-option {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+    
+    .filter-option.active {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .alert-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+    
+    .alert-count-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .alert-history-toggle {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .alert-history {
+        display: none;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .alert-history.show {
+        display: block;
+    }
+    
+    .history-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        font-size: 0.9rem;
+    }
+    
+    .history-time {
+        color: #6c757d;
+    }
+    
+    .no-alerts {
+        text-align: center;
+        padding: 50px 0;
+    }
+    
+    .no-alerts i {
+        font-size: 3rem;
+        color: var(--success-color);
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alert-filters">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="filter-group">
+                <span class="filter-label">Severity:</span>
+                <div class="filter-options" id="severity-filters">
+                    <span class="filter-option active" data-value="all">All</span>
+                    <span class="filter-option" data-value="info">Info</span>
+                    <span class="filter-option" data-value="warning">Warning</span>
+                    <span class="filter-option" data-value="critical">Critical</span>
+                    <span class="filter-option" data-value="emergency">Emergency</span>
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Status:</span>
+                <div class="filter-options" id="status-filters">
+                    <span class="filter-option active" data-value="all">All</span>
+                    <span class="filter-option" data-value="active">Active</span>
+                    <span class="filter-option" data-value="acknowledged">Acknowledged</span>
+                    <span class="filter-option" data-value="silenced">Silenced</span>
+                    <span class="filter-option" data-value="resolved">Resolved</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="alert-count">{{ active_alerts|length }}</div>
+            <div class="alert-count-label">Active Alerts</div>
+        </div>
+    </div>
+</div>
+
+<div id="alerts-container">
+    {% if active_alerts %}
+        {% for alert in active_alerts %}
+        <div class="card alert-card alert-{{ alert.severity }}" id="alert-{{ alert.id }}" data-severity="{{ alert.severity }}" data-state="{{ alert.state }}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge severity-{{ alert.severity }} me-2">{{ alert.severity }}</span>
+                        <h5 class="d-inline">{{ alert.name }}</h5>
+                    </div>
+                    <div class="alert-actions">
+                        {% if alert.state == 'active' %}
+                        <button class="btn btn-sm btn-outline-primary acknowledge-btn" data-alert-id="{{ alert.id }}">Acknowledge</button>
+                        {% endif %}
+                        {% if alert.state != 'resolved' %}
+                        <button class="btn btn-sm btn-outline-success resolve-btn" data-alert-id="{{ alert.id }}">Resolve</button>
+                        {% endif %}
+                        {% if alert.state != 'silenced' and alert.state != 'resolved' %}
+                        <button class="btn btn-sm btn-outline-secondary silence-btn" data-alert-id="{{ alert.id }}">Silence</button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p class="mt-2">{{ alert.description }}</p>
+                
+                <div class="alert-details mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <strong>Value:</strong> {{ alert.value }} (Threshold: {{ alert.threshold }})
+                            </div>
+                            <div class="mb-2">
+                                <strong>First detected:</strong> <span class="alert-time" data-time="{{ alert.first_detected }}">{{ alert.first_detected }}</span>
+                            </div>
+                            {% if alert.acknowledged_by %}
+                            <div class="mb-2">
+                                <strong>Acknowledged by:</strong> {{ alert.acknowledged_by }} at <span class="alert-time" data-time="{{ alert.acknowledged_at }}">{{ alert.acknowledged_at }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if alert.labels %}
+                            <div class="mb-2">
+                                <strong>Labels:</strong> 
+                                {% for key, value in alert.labels.items() %}
+                                <span class="badge bg-secondary">{{ key }}={{ value }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if alert.silenced_until %}
+                            <div class="mb-2">
+                                <strong>Silenced until:</strong> <span class="alert-time" data-time="{{ alert.silenced_until }}">{{ alert.silenced_until }}</span>
+                            </div>
+                            {% endif %}
+                            {% if alert.resolved_at %}
+                            <div class="mb-2">
+                                <strong>Resolved at:</strong> <span class="alert-time" data-time="{{ alert.resolved_at }}">{{ alert.resolved_at }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert-meta">
+                    <div>Rule ID: {{ alert.rule_id }}</div>
+                    <div class="alert-history-toggle" data-alert-id="{{ alert.id }}">
+                        <i class="bi bi-clock-history"></i> View History
+                    </div>
+                </div>
+                
+                <div class="alert-history" id="history-{{ alert.id }}">
+                    <div class="history-item">
+                        <div>Alert created</div>
+                        <div class="history-time alert-time" data-time="{{ alert.first_detected }}">{{ alert.first_detected }}</div>
+                    </div>
+                    {% if alert.acknowledged_at %}
+                    <div class="history-item">
+                        <div>Acknowledged by {{ alert.acknowledged_by }}</div>
+                        <div class="history-time alert-time" data-time="{{ alert.acknowledged_at }}">{{ alert.acknowledged_at }}</div>
+                    </div>
+                    {% endif %}
+                    {% if alert.silenced_until %}
+                    <div class="history-item">
+                        <div>Silenced until</div>
+                        <div class="history-time alert-time" data-time="{{ alert.silenced_until }}">{{ alert.silenced_until }}</div>
+                    </div>
+                    {% endif %}
+                    {% if alert.resolved_at %}
+                    <div class="history-item">
+                        <div>Resolved</div>
+                        <div class="history-time alert-time" data-time="{{ alert.resolved_at }}">{{ alert.resolved_at }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="no-alerts">
+        <i class="bi bi-check-circle"></i>
+        <h4>No Active Alerts</h4>
+        <p>The system is operating normally. No alerts have been triggered.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format timestamps
+        const timeElements = document.querySelectorAll('.alert-time');
+        timeElements.forEach(el => {
+            const timestamp = el.getAttribute('data-time');
+            el.textContent = formatDateTime(timestamp);
+        });
+        
+        // Handle filter clicks
+        const severityFilters = document.querySelectorAll('#severity-filters .filter-option');
+        const statusFilters = document.querySelectorAll('#status-filters .filter-option');
+        
+        severityFilters.forEach(filter => {
+            filter.addEventListener('click', function() {
+                severityFilters.forEach(f => f.classList.remove('active'));
+                this.classList.add('active');
+                applyFilters();
+            });
+        });
+        
+        statusFilters.forEach(filter => {
+            filter.addEventListener('click', function() {
+                statusFilters.forEach(f => f.classList.remove('active'));
+                this.classList.add('active');
+                applyFilters();
+            });
+        });
+        
+        // Handle alert history toggle
+        const historyToggles = document.querySelectorAll('.alert-history-toggle');
+        historyToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const alertId = this.getAttribute('data-alert-id');
+                const historyElement = document.getElementById(`history-${alertId}`);
+                historyElement.classList.toggle('show');
+                
+                if (historyElement.classList.contains('show')) {
+                    this.innerHTML = '<i class="bi bi-chevron-up"></i> Hide History';
+                } else {
+                    this.innerHTML = '<i class="bi bi-clock-history"></i> View History';
+                }
+            });
+        });
+        
+        // Handle alert actions
+        const acknowledgeBtns = document.querySelectorAll('.acknowledge-btn');
+        const resolveBtns = document.querySelectorAll('.resolve-btn');
+        const silenceBtns = document.querySelectorAll('.silence-btn');
+        
+        acknowledgeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const alertId = this.getAttribute('data-alert-id');
+                acknowledgeAlert(alertId);
+            });
+        });
+        
+        resolveBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const alertId = this.getAttribute('data-alert-id');
+                resolveAlert(alertId);
+            });
+        });
+        
+        silenceBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const alertId = this.getAttribute('data-alert-id');
+                silenceAlert(alertId);
+            });
+        });
+        
+        // Check if there's a hash in the URL to scroll to a specific alert
+        if (window.location.hash) {
+            const alertId = window.location.hash.substring(1);
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                setTimeout(() => {
+                    alertElement.scrollIntoView({ behavior: 'smooth' });
+                    alertElement.classList.add('highlight');
+                    setTimeout(() => {
+                        alertElement.classList.remove('highlight');
+                    }, 2000);
+                }, 500);
+            }
+        }
+    });
+    
+    function applyFilters() {
+        const selectedSeverity = document.querySelector('#severity-filters .filter-option.active').getAttribute('data-value');
+        const selectedStatus = document.querySelector('#status-filters .filter-option.active').getAttribute('data-value');
+        
+        const alertCards = document.querySelectorAll('.alert-card');
+        let visibleCount = 0;
+        
+        alertCards.forEach(card => {
+            const cardSeverity = card.getAttribute('data-severity');
+            const cardState = card.getAttribute('data-state');
+            
+            const severityMatch = selectedSeverity === 'all' || selectedSeverity === cardSeverity;
+            const statusMatch = selectedStatus === 'all' || selectedStatus === cardState;
+            
+            if (severityMatch && statusMatch) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update count
+        document.querySelector('.alert-count').textContent = visibleCount;
+    }
+    
+    async function acknowledgeAlert(alertId) {
+        try {
+            const response = await fetch(`/alerts/${alertId}/acknowledge`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // In a real app, we would update the UI based on the response
+                // For now, just reload the page
+                window.location.reload();
+            } else {
+                const error = await response.json();
+                alert(`Failed to acknowledge alert: ${error.detail}`);
+            }
+        } catch (error) {
+            console.error('Error acknowledging alert:', error);
+            alert('Failed to acknowledge alert. See console for details.');
+        }
+    }
+    
+    async function resolveAlert(alertId) {
+        try {
+            const response = await fetch(`/alerts/${alertId}/resolve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // In a real app, we would update the UI based on the response
+                // For now, just reload the page
+                window.location.reload();
+            } else {
+                const error = await response.json();
+                alert(`Failed to resolve alert: ${error.detail}`);
+            }
+        } catch (error) {
+            console.error('Error resolving alert:', error);
+            alert('Failed to resolve alert. See console for details.');
+        }
+    }
+    
+    async function silenceAlert(alertId) {
+        const duration = prompt('Enter silence duration in minutes:', '60');
+        if (!duration) return;
+        
+        try {
+            const response = await fetch(`/alerts/${alertId}/silence?duration_minutes=${duration}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // In a real app, we would update the UI based on the response
+                // For now, just reload the page
+                window.location.reload();
+            } else {
+                const error = await response.json();
+                alert(`Failed to silence alert: ${error.detail}`);
+            }
+        } catch (error) {
+            console.error('Error silencing alert:', error);
+            alert('Failed to silence alert. See console for details.');
+        }
+    }
+</script>
+{% endblock %}

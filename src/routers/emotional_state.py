@@ -10,6 +10,8 @@ import logging
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
+from datetime import datetime
+from pydantic import BaseModel
 
 from models.emotional_state import (
     EmotionalStateInput, 
@@ -18,12 +20,14 @@ from models.emotional_state import (
     SafetyStatus
 )
 from symbolic.canopy import get_canopy_processor
-from symbolic.moss import get_moss_processor
+from symbolic.moss.processor import get_moss_processor
 from symbolic.veluria import get_veluria_protocol
 from security.auth import get_current_user_with_scope
+from src.symbolic.moss import RiskAssessment, CrisisContext
+from structured_logging import get_logger
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # In-memory cache of recent emotional states per user
 # In production, this would use Redis or another distributed cache

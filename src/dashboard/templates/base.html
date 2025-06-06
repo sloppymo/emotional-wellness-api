@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title }} - Emotional Wellness Clinical Dashboard{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/dashboard.css') }}">
+    
+    {% block additional_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-heartbeat"></i> Clinical Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}" href="/dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'crisis-trends' in request.url.path %}active{% endif %}" href="/dashboard/crisis-trends">
+                            <i class="fas fa-chart-line"></i> Crisis Trends
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'risk-stratification' in request.url.path %}active{% endif %}" href="/dashboard/risk-stratification">
+                            <i class="fas fa-layer-group"></i> Risk Stratification
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'wellness-trajectories' in request.url.path %}active{% endif %}" href="/dashboard/wellness-trajectories">
+                            <i class="fas fa-route"></i> Wellness Trajectories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'intervention-outcomes' in request.url.path %}active{% endif %}" href="/dashboard/intervention-outcomes">
+                            <i class="fas fa-clipboard-check"></i> Intervention Outcomes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'patient-history' in request.url.path %}active{% endif %}" href="/dashboard/patient-history">
+                            <i class="fas fa-history"></i> Patient History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'early-warnings' in request.url.path %}active{% endif %}" href="/dashboard/early-warnings">
+                            <i class="fas fa-exclamation-triangle"></i> Early Warnings
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> {{ user.email }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/api/v1/users/me">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/api/v1/auth/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">Emotional Wellness API &copy; 2024</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Axios for API calls -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', path='/js/dashboard.js') }}"></script>
+    
+    <!-- WebSocket connection -->
+    <script>
+        const socket = io('/dashboard', {
+            auth: {
+                token: localStorage.getItem('access_token')
+            }
+        });
+        
+        socket.on('connect', () => {
+            console.log('Connected to dashboard WebSocket');
+        });
+        
+        socket.on('task_update', (data) => {
+            console.log('Task update:', data);
+            // Handle task updates
+        });
+        
+        socket.on('early_warning', (data) => {
+            console.log('Early warning:', data);
+            // Show notification for early warnings
+            showNotification('warning', data.message);
+        });
+    </script>
+    
+    {% block additional_js %}{% endblock %}
+</body>
+</html> 

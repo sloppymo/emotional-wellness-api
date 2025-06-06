@@ -1,26 +1,28 @@
 # Emotional Wellness API
 
+[![Alpha Status](https://img.shields.io/badge/status-alpha-red.svg)](https://github.com/yourusername/emotional-wellness-api)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0+-green.svg)](https://fastapi.tiangolo.com/)
-[![HIPAA Compliant](https://img.shields.io/badge/HIPAA-compliant-brightgreen.svg)](https://www.hhs.gov/hipaa/index.html)
-[![Code Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://coverage.readthedocs.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> A comprehensive FastAPI-based platform for mental health and emotional wellness, featuring advanced crisis detection (VELURIA), longitudinal analytics (ROOT), clinical assessment, intervention management, and an interactive monitoring dashboard.
+> A FastAPI-based platform for mental health and emotional wellness, featuring crisis detection (VELURIA), longitudinal analytics (ROOT), clinical assessment, intervention management, and interactive monitoring dashboards.
 
 <p align="center">
   <img src="./assets/dashboard_preview.png" alt="Emotional Wellness API Dashboard" width="80%"/>
 </p>
 
+> **⚠️ IMPORTANT: ALPHA STAGE SOFTWARE**  
+> This project is in early alpha stage development and **NOT READY FOR PRODUCTION USE**. Many features are incomplete, untested in real-world scenarios, or may change significantly. Do not use with sensitive patient data or in clinical settings until a stable release is available.
+
 ## 📖 Overview
 
-The Emotional Wellness API is a state-of-the-art backend system designed for mental health practitioners, crisis responders, and wellness applications. It combines clinical expertise with advanced machine learning to provide real-time risk assessment, automated intervention protocols, and comprehensive analytics.
+The Emotional Wellness API is a backend system being developed for mental health practitioners, crisis responders, and wellness applications. It aims to combine clinical expertise with machine learning to provide risk assessment, intervention protocols, and analytics.
 
-- **Production-Ready**: 4,000+ lines of code, 300+ tests, full documentation
-- **Advanced Analytics**: Machine learning for crisis detection and longitudinal analysis
-- **HIPAA Compliant**: End-to-end security, audit logging, and PHI protection
-- **Interactive Dashboards**: Clinical insights, system health, and operational metrics
-- **Extensible Architecture**: Modular design, clean APIs, and developer-friendly
+- **Under Active Development**: Regular updates and feature additions
+- **Analytics Prototypes**: Early implementations of crisis detection and trend analysis algorithms
+- **Security Focus**: Working toward HIPAA compliance with ongoing development of security features
+- **Dashboard Prototypes**: Early versions of clinical insights and system monitoring visualizations
+- **Developer Preview**: API structure and documentation evolving based on feedback
 
 ## 🌟 Key Features
 
@@ -50,13 +52,12 @@ The Emotional Wellness API includes a robust, extensible monitoring and admin da
 
 - **Admin Dashboard UI**: Secure, role-based dashboards for system health, alerts, metrics, background tasks, and integrations.
 - **Metrics & Alerts APIs**: REST endpoints for listing, filtering, and exporting all system metrics and alerts.
-- **Historical Metrics Storage**: Efficient time-series storage and aggregation with Redis TimeSeries.
-- **Advanced Filtering & Export**: UI and API support for aggregation, label-based filtering, custom date ranges, and CSV/JSON export.
-- **Extensible**: Add new metrics, integrations, and alert rules with minimal code changes.
 
 See [MONITORING.md](./MONITORING.md) for full documentation and operational details.
 
-## 🚀 Quick Start
+## 🧵 Quick Start (Developer Preview)
+
+> **Warning**: This alpha version is for development and testing only. Do not use in production.
 
 ### Prerequisites
 - Python 3.11+
@@ -217,7 +218,7 @@ src/
 └── main.py          # Application entry point
 ```
 
-## 🧠 Advanced Analytics Systems
+## 🧠 Analytics Systems (Prototype Stage)
 
 ### VELURIA: Crisis Detection & Intervention
 
@@ -303,15 +304,15 @@ CANOPY provides metaphor analysis and symbolic mapping capabilities:
 - **Symbolic Integration**: Connects metaphorical expressions to clinical concepts
 - **Multi-lingual Support**: Works across multiple languages and cultures
 
-## 🏢 Architecture
+## 🏢 Architecture (Evolving Design)
 
 ### System Architecture
 
 <p align="center">
-  <img src="./assets/architecture.png" alt="System Architecture" width="80%"/>
+  <img src="./assets/architecture.png" alt="Planned System Architecture" width="80%"/>
 </p>
 
-The Emotional Wellness API is built on a modern, scalable architecture:
+The Emotional Wellness API is being designed with the following architecture (subject to change during development):
 
 - **FastAPI Backend**: Asynchronous API with dependency injection and middleware
 - **Domain-Driven Design**: Separated domains for clinical, symbolic, and monitoring concerns
@@ -355,9 +356,11 @@ src/
 └── utils/           # Shared utilities
 ```
 
-## 🔒 Security Features
+## 🔒 Security Features (In Development)
 
-### Authentication & Authorization
+> **Note**: Security features are under active development and have not undergone formal security audits or penetration testing.
+
+### Authentication & Authorization (Prototype)
 
 - **JWT Authentication**: Secure, short-lived access tokens with refresh capability
 - **Role-Based Access Control**: Fine-grained permissions by clinical, admin, and user roles
@@ -365,12 +368,12 @@ src/
 - **Password Security**: Argon2id hashing with adaptive parameters and policy enforcement
 - **Session Management**: Secure, short-lived sessions with automatic expiration
 
-### Data Protection
+### Data Protection (Planned)
 
-- **PHI Protection**: HIPAA-compliant redaction and anonymization
-- **Encryption**: AES-256 for data at rest, TLS 1.3 for data in transit
-- **Database Security**: Column-level encryption for sensitive fields
-- **Audit Logging**: Immutable, comprehensive audit trail of all data access
+- **PHI Protection**: Working toward HIPAA compliance with data redaction and anonymization
+- **Encryption**: Implementing AES-256 for data at rest, TLS 1.3 for data in transit
+- **Database Security**: Planning column-level encryption for sensitive fields
+- **Audit Logging**: Developing comprehensive audit trail capabilities
 
 ```python
 # Example: Using the secure PHI logger
@@ -402,16 +405,16 @@ async def access_patient_data(user_id, patient_id, reason):
 - **CORS Protection**: Strict origin policies
 - **Vulnerability Scanning**: Integrated security scanner in CI/CD pipeline
 
-### Compliance
+### Compliance (Roadmap)
 
-- **HIPAA Compliance**: Technical safeguards for Protected Health Information (PHI)
-- **Audit Trails**: Comprehensive logging of all access and changes to sensitive data
-- **Risk Assessment**: Automated and manual security assessment tools
-- **Incident Response**: Defined protocols for security incidents
+- **HIPAA Compliance**: Working toward technical safeguards for PHI
+- **Audit Trails**: Developing logging systems for access tracking
+- **Risk Assessment**: Planning security assessment procedures
+- **Incident Response**: Drafting protocols for security incidents
 
-## 📈 Monitoring & Observability
+## 📈 Monitoring & Observability (Early Development)
 
-The Emotional Wellness API includes a robust monitoring and observability stack:
+The Emotional Wellness API is developing a monitoring and observability stack:
 
 ### Metrics & Dashboards
 
@@ -455,24 +458,26 @@ async def get_system_metrics(token, start_time, end_time):
 
 For comprehensive details on monitoring and observability, see [MONITORING.md](./MONITORING.md).
 
-## 🛠️ Advanced Deployment
+## 🛠️ Deployment Planning
 
-### Production Deployment Architecture
+> **Important**: The deployment architecture described below is aspirational and not yet fully implemented or tested.
+
+### Future Deployment Architecture
 
 <p align="center">
   <img src="./assets/deployment_architecture.png" alt="Production Architecture" width="80%"/>
 </p>
 
-### Cloud Deployment (AWS)
+### Planned Cloud Deployment (AWS)
 
 ```bash
-# Deploy with Terraform to AWS
-cd terraform/aws
-terraform init
-terraform apply
+# Note: Terraform scripts are under development and not yet functional
+# cd terraform/aws
+# terraform init
+# terraform apply
 ```
 
-Production deployments use containerization with orchestration:
+Future production deployments are planned to use containerization:
 
 - **Docker Containers**: Separate containers for API, workers, and Redis
 - **Kubernetes**: Orchestration for scaling and resilience
@@ -514,9 +519,9 @@ The project includes GitLab CI/GitHub Actions workflows for:
 - **Deployment**: Automated deployment to staging/production
 - **Post-Deployment Verification**: Health checks and smoke tests
 
-## 👩‍💻 Contributing
+## 👩‍💻 Contributing to this Alpha Project
 
-We welcome contributions to the Emotional Wellness API! Here's how to get involved:
+We welcome contributions to the Emotional Wellness API during its alpha development! Here's how to get involved:
 
 ### Development Setup
 
@@ -589,7 +594,9 @@ celery -A src.tasks.celery_app worker --loglevel=info
 5. Run tests: `pytest --cov=src`
 6. Submit a pull request with a clear description
 
-## 🧪 Testing
+## 🧪 Testing (In Progress)
+
+> **Note**: Test coverage is incomplete and under active development. Many components still require comprehensive test suites.
 
 ### Running Tests
 
@@ -673,7 +680,9 @@ curl http://localhost:8000/health
 
 For full details, see [MONITORING.md](./MONITORING.md).
 
-## 🐛 Troubleshooting
+## 🐛 Troubleshooting (Alpha Development)
+
+> **Note**: As this is alpha software, you may encounter additional issues not listed here. Please report them via GitHub issues.
 
 ### Common Issues
 
@@ -770,15 +779,15 @@ Special thanks to:
 - Our early adopters and testers for their feedback
 - All contributors and maintainers of the project
 
-## 📞 Support
+## 📞 Alpha Support
 
-For support with the Emotional Wellness API, you have several options:
+For support with this alpha version of the Emotional Wellness API:
 
-- **GitHub Issues**: For bug reports, feature requests, and general questions
-- **Documentation**: Refer to the docs directory for detailed guides
-- **Community Forum**: Join our community at [community.emotionalwellness.api](https://community.emotionalwellness.api)
+- **GitHub Issues**: Please report bugs, request features, or ask questions via GitHub issues
+- **Documentation**: Reference the docs directory, though please note documentation is still being developed
+- **Development Updates**: Watch the GitHub repository for updates on development progress
 
-For enterprise support or HIPAA compliance questions, please contact us at support@emotionalwellness.api
+This is an alpha project and not yet ready for enterprise deployments or HIPAA-compliant implementations.
 
 ---
 
@@ -790,6 +799,7 @@ We respectfully acknowledge that the work on this project takes place on the tra
 
 <p align="center">
   <strong>Emotional Wellness API</strong><br>
+  <em>Alpha Development Version</em><br>
   Built with ❤️ for mental health support<br>
   <a href="https://github.com/yourusername/emotional-wellness-api/stargazers">⭐ Star us on GitHub</a>
 </p>

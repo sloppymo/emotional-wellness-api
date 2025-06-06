@@ -5,3 +5,4 @@ uvicorn
 python-jose
 pydantic-settings
 email-validator
+redis[async]

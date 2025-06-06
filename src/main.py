@@ -20,6 +20,7 @@ from api.version import API_VERSION
 from api.middleware import RateLimiterMiddleware
 from middleware.ip_whitelist import IPWhitelistMiddleware
 from routers import emotional_state, sessions, users, health, symbolic
+from integration import router as integration_router
 from security.auth import get_api_key
 from config.settings import get_settings
 
@@ -115,6 +116,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 app.include_router(health.router, tags=["System"])
 app.include_router(emotional_state.router, tags=["Emotional Processing"], dependencies=[Depends(get_api_key)])
 app.include_router(sessions.router, tags=["Sessions"], dependencies=[Depends(get_api_key)])
+app.include_router(integration_router, tags=["SYLVA-WREN Integration"])
 app.include_router(users.router, tags=["Users"], dependencies=[Depends(get_api_key)])
 # Add symbolic router with prefix
 app.include_router(

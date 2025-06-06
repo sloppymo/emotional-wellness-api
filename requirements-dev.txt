@@ -1,0 +1,7 @@
+pytest
+fastapi
+httpx
+uvicorn
+python-jose
+pydantic-settings
+email-validator

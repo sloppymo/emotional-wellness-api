@@ -1,0 +1,284 @@
+"""
+VELURIA: Crisis intervention protocol implementation
+
+This module implements the state machine for crisis detection and response
+with three progressive intervention levels:
+- Level 1: Symbolic grounding
+- Level 2: Automated safety protocol
+- Level 3: Human intervention escalation
+"""
+
+import logging
+import uuid
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+from enum import Enum
+
+from models.emotional_state import SafetyStatus, InterventionRecord
+
+logger = logging.getLogger(__name__)
+
+class VeluriaState(Enum):
+    """Enumeration of VELURIA protocol states"""
+    SAFE = 0
+    LEVEL_1 = 1  # Symbolic grounding
+    LEVEL_2 = 2  # Automated safety protocol
+    LEVEL_3 = 3  # Human intervention
+    MONITORING = 4  # Post-intervention monitoring
+
+
+class VeluriaProtocol:
+    """VELURIA crisis detection and intervention protocol"""
+    
+    def __init__(self):
+        """Initialize the VELURIA protocol"""
+        # Cache of current states for active users
+        self.user_states: Dict[str, VeluriaState] = {}
+        # Track intervention records for audit and continuity
+        self.intervention_history: Dict[str, List[InterventionRecord]] = {}
+        # Crisis team notification function (to be set by application)
+        self.notify_crisis_team = None
+        
+    def register_crisis_team_notifier(self, notify_function):
+        """Register a function to notify crisis team for Level 3 interventions"""
+        self.notify_crisis_team = notify_function
+    
+    def execute_protocol(self, 
+                       user_id: str, 
+                       safety_status: SafetyStatus,
+                       additional_context: Optional[Dict[str, Any]] = None) -> InterventionRecord:
+        """
+        Execute VELURIA protocol based on safety status
+        
+        Args:
+            user_id: Identifier for the user
+            safety_status: Safety evaluation from MOSS
+            additional_context: Optional context information
+            
+        Returns:
+            InterventionRecord with details about the protocol execution
+        """
+        logger.info(f"Executing VELURIA protocol for user {user_id} at level {safety_status.level}")
+        
+        current_state = self.user_states.get(user_id, VeluriaState.SAFE)
+        new_state = self._determine_state(current_state, safety_status)
+        
+        # Record state transition
+        self.user_states[user_id] = new_state
+        
+        # Execute appropriate intervention based on state
+        intervention_record = self._execute_intervention(user_id, new_state, safety_status, additional_context)
+        
+        # Store intervention record
+        if user_id not in self.intervention_history:
+            self.intervention_history[user_id] = []
+        self.intervention_history[user_id].append(intervention_record)
+        
+        return intervention_record
+    
+    def _determine_state(self, current_state: VeluriaState, safety_status: SafetyStatus) -> VeluriaState:
+        """Determine the new state based on current state and safety status"""
+        requested_level = safety_status.level
+        
+        # State transition logic - the protocol can escalate quickly but recovers gradually
+        if requested_level == 3:
+            return VeluriaState.LEVEL_3
+        elif requested_level == 2:
+            # Can only reduce from LEVEL_3 to LEVEL_2 after an explicit recovery
+            if current_state == VeluriaState.LEVEL_3:
+                return current_state
+            return VeluriaState.LEVEL_2
+        elif requested_level == 1:
+            # Can only reduce from higher levels after explicit recovery
+            if current_state in (VeluriaState.LEVEL_2, VeluriaState.LEVEL_3):
+                return current_state
+            return VeluriaState.LEVEL_1
+        else:  # requested_level == 0
+            # Only return to SAFE state gradually
+            if current_state == VeluriaState.LEVEL_3:
+                return VeluriaState.LEVEL_2  # Gradual step-down
+            elif current_state == VeluriaState.LEVEL_2:
+                return VeluriaState.LEVEL_1  # Gradual step-down
+            elif current_state == VeluriaState.LEVEL_1:
+                return VeluriaState.SAFE
+            else:
+                return VeluriaState.SAFE
+    
+    def _execute_intervention(self, 
+                           user_id: str, 
+                           state: VeluriaState, 
+                           safety_status: SafetyStatus,
+                           additional_context: Optional[Dict[str, Any]] = None) -> InterventionRecord:
+        """Execute intervention actions based on the determined state"""
+        intervention_id = str(uuid.uuid4())
+        timestamp = datetime.now()
+        actions_taken = []
+        resources_provided = []
+        
+        # Execute actions based on state
+        if state == VeluriaState.LEVEL_1:
+            actions_taken, resources_provided = self._level1_intervention()
+        elif state == VeluriaState.LEVEL_2:
+            actions_taken, resources_provided = self._level2_intervention()
+        elif state == VeluriaState.LEVEL_3:
+            actions_taken, resources_provided = self._level3_intervention(user_id, safety_status, additional_context)
+        
+        # Create and return intervention record
+        return InterventionRecord(
+            id=intervention_id,
+            user_id=user_id,
+            timestamp=timestamp,
+            level=state.value,
+            triggers=safety_status.triggers,
+            risk_score=safety_status.risk_score,
+            actions_taken=actions_taken,
+            resources_provided=resources_provided,
+            state_before=getattr(self.user_states.get(user_id, VeluriaState.SAFE), "value", 0),
+            state_after=state.value
+        )
+    
+    def _level1_intervention(self) -> tuple[List[str], List[str]]:
+        """Execute Level 1 intervention: Symbolic grounding"""
+        actions_taken = ["symbolic_grounding", "emotional_acknowledgment"]
+        
+        resources_provided = [
+            "grounding_techniques",
+            "alternative_perspectives",
+            "symbolic_reflection"
+        ]
+        
+        return actions_taken, resources_provided
+    
+    def _level2_intervention(self) -> tuple[List[str], List[str]]:
+        """Execute Level 2 intervention: Automated safety protocol"""
+        actions_taken = [
+            "safety_resources_provided",
+            "grounding_techniques_suggested",
+            "support_options_presented"
+        ]
+        
+        resources_provided = [
+            "crisis_text_line",
+            "breathing_exercises",
+            "local_support_options",
+            "self_care_strategies"
+        ]
+        
+        return actions_taken, resources_provided
+    
+    def _level3_intervention(self, 
+                          user_id: str, 
+                          safety_status: SafetyStatus,
+                          additional_context: Optional[Dict[str, Any]]) -> tuple[List[str], List[str]]:
+        """Execute Level 3 intervention: Human intervention escalation"""
+        actions_taken = [
+            "crisis_team_notification",
+            "emergency_resources_provided",
+            "continued_support_during_transition"
+        ]
+        
+        resources_provided = [
+            "crisis_hotline_information",
+            "emergency_services_contact",
+            "immediate_professional_support_options",
+            "safety_planning_resources"
+        ]
+        
+        # Notify crisis team if handler is registered
+        if self.notify_crisis_team:
+            # Sanitize the context to ensure no PHI is transmitted unnecessarily
+            safe_context = {
+                "user_id": user_id,
+                "timestamp": datetime.now().isoformat(),
+                "risk_level": safety_status.level,
+                "risk_score": safety_status.risk_score,
+                "triggers": safety_status.triggers
+            }
+            
+            if additional_context:
+                # Only include safe fields from additional context
+                safe_fields = ["session_id", "platform", "location_type", "has_support_contact"]
+                for field in safe_fields:
+                    if field in additional_context:
+                        safe_context[field] = additional_context[field]
+            
+            try:
+                self.notify_crisis_team(safe_context)
+                actions_taken.append("crisis_team_notification_sent")
+                logger.info(f"Crisis team notification sent for user {user_id}")
+            except Exception as e:
+                logger.error(f"Failed to notify crisis team: {str(e)}")
+                actions_taken.append("crisis_team_notification_failed")
+        
+        return actions_taken, resources_provided
+    
+    def record_manual_intervention(self, 
+                                user_id: str, 
+                                intervener_id: str,
+                                notes: str,
+                                outcome: str) -> InterventionRecord:
+        """
+        Record a manual intervention by crisis team or clinician
+        
+        Args:
+            user_id: ID of the user who received intervention
+            intervener_id: ID of the person who performed intervention
+            notes: Clinical notes about the intervention (PHI-sensitive)
+            outcome: Outcome of the intervention
+            
+        Returns:
+            InterventionRecord with details about the manual intervention
+        """
+        intervention_id = str(uuid.uuid4())
+        timestamp = datetime.now()
+        
+        # Set user state to monitoring after manual intervention
+        self.user_states[user_id] = VeluriaState.MONITORING
+        
+        # Create intervention record with anonymized notes
+        record = InterventionRecord(
+            id=intervention_id,
+            user_id=user_id,
+            timestamp=timestamp,
+            level=4,  # Manual intervention level
+            triggers=["manual_intervention"],
+            risk_score=1.0,  # Default high for manual
+            actions_taken=["manual_clinical_intervention"],
+            resources_provided=[],  # Clinician determined
+            state_before=3,  # Assume was in crisis
+            state_after=4,  # Monitoring
+            intervener_id=intervener_id,
+            outcome=outcome
+        )
+        
+        # Store in history
+        if user_id not in self.intervention_history:
+            self.intervention_history[user_id] = []
+        self.intervention_history[user_id].append(record)
+        
+        return record
+    
+    def get_user_state(self, user_id: str) -> VeluriaState:
+        """Get the current VELURIA state for a user"""
+        return self.user_states.get(user_id, VeluriaState.SAFE)
+    
+    def get_intervention_history(self, user_id: str) -> List[InterventionRecord]:
+        """Get intervention history for a user"""
+        return self.intervention_history.get(user_id, [])
+    
+    def reset_user_state(self, user_id: str) -> None:
+        """Reset user to SAFE state (for testing or administrative purposes)"""
+        if user_id in self.user_states:
+            self.user_states[user_id] = VeluriaState.SAFE
+            logger.info(f"Reset VELURIA state for user {user_id}")
+
+
+# Singleton instance for application-wide use
+_instance = None
+
+def get_veluria_protocol():
+    """Get or create the singleton instance of VeluriaProtocol"""
+    global _instance
+    if _instance is None:
+        _instance = VeluriaProtocol()
+    return _instance

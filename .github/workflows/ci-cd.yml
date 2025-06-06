@@ -1,0 +1,361 @@
+name: HIPAA-Compliant CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: emotional-wellness-api
+
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy
+          pip install -r requirements.txt
+
+      - name: Run linters
+        run: |
+          flake8 src tests
+          black --check src tests
+          isort --check-only --profile black src tests
+          mypy src
+
+  test:
+    name: Run Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: wellness
+          POSTGRES_PASSWORD: wellness
+          POSTGRES_DB: wellness
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+
+      - name: Run tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: wellness
+          POSTGRES_PASSWORD: wellness
+          POSTGRES_DB: wellness
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          ENVIRONMENT: test
+          TESTING: "true"
+          JWT_SECRET_KEY: test_secret_key_for_jwt_not_for_production
+          PHI_ENCRYPTION_KEY: test_secret_key_for_phi_encryption_not_for_production
+          API_KEY: test_api_key_not_for_production
+        run: |
+          pytest --cov=src --cov-report=xml
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+
+  security-scan:
+    name: Security Scanning
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
+
+      - name: Run Bandit (SAST)
+        run: bandit -r src -f json -o bandit-results.json
+        continue-on-error: true
+
+      - name: Run Safety (dependency scanning)
+        run: safety check --full-report
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'http://localhost:8000'
+          fail_action: false
+          docker_name: 'ghcr.io/zaproxy/zaproxy:stable'
+
+  build-and-push:
+    name: Build and Push Docker Image
+    needs: [test, security-scan]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: |
+          # Build Docker image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            --build-arg ENVIRONMENT=$ENVIRONMENT \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VCS_REF=${{ github.sha }} \
+            .
+            
+          # Scan image for vulnerabilities
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image --severity HIGH,CRITICAL \
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            
+          # Push image to ECR
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:${ENVIRONMENT}-latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${ENVIRONMENT}-latest
+          
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+  terraform-plan:
+    name: Terraform Plan
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        id: init
+        working-directory: ./deployment/terraform
+        run: terraform init
+
+      - name: Terraform Format
+        id: fmt
+        working-directory: ./deployment/terraform
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        id: validate
+        working-directory: ./deployment/terraform
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ./deployment/terraform
+        env:
+          TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          TF_VAR_image_tag: ${{ github.sha }}
+        run: terraform plan -no-color
+
+  deploy:
+    name: Deploy to AWS
+    needs: terraform-plan
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Apply
+        id: apply
+        working-directory: ./deployment/terraform
+        env:
+          TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          TF_VAR_image_tag: ${{ github.sha }}
+        run: terraform apply -auto-approve
+
+  compliance-check:
+    name: HIPAA Compliance Check
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install compliance tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install checkov
+
+      - name: Check Infrastructure Compliance
+        run: |
+          checkov -d ./deployment/terraform --framework hipaa
+          
+      - name: Generate HIPAA Compliance Report
+        run: |
+          echo "# HIPAA Compliance Report" > compliance-report.md
+          echo "## Generated on $(date)" >> compliance-report.md
+          echo "### Infrastructure Compliance" >> compliance-report.md
+          
+          # Add results from checkov scan to report
+          checkov -d ./deployment/terraform --framework hipaa -o json > checkov-results.json
+          
+          # In a real scenario, you would process this JSON file to create a formatted report
+          echo "Compliance checks completed. Please review logs for details." >> compliance-report.md
+
+      - name: Upload Compliance Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: hipaa-compliance-report
+          path: compliance-report.md
+          
+  notification:
+    name: Send Deployment Notification
+    needs: [deploy, compliance-check]
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Send deployment notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "Deployment Status: ${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Emotional Wellness API Deployment"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\n${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}"
+                    },
+                    {
+                      "type": "mrkdwn", 
+                      "text": "*Status:*\n${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Compliance Check:*\n${{ needs.compliance-check.result == 'success' && '✅ Passed' || '⚠️ Review Needed' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered By:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Deployment Details>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

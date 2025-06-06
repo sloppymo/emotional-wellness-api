@@ -28,10 +28,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
 import joblib
 
-from ..moss import MossProcessor, get_moss_processor
 from models.emotional_state import SymbolicMapping, SafetyStatus
 from structured_logging import get_logger
 
+# MossProcessor has been moved to processor.py to avoid circular imports
 logger = get_logger(__name__)
 
 class CrisisSeverity(str, Enum):
@@ -42,6 +42,9 @@ class CrisisSeverity(str, Enum):
     HIGH = "high"
     CRITICAL = "critical"
     IMMINENT = "imminent"
+
+# For backward compatibility
+RiskSeverity = CrisisSeverity  # Alias for backward compatibility
 
 class RiskDomain(str, Enum):
     """Risk assessment domains."""

@@ -1,0 +1,423 @@
+{% extends "admin/base.html" %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        transition: transform 0.2s;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .alert-table tr {
+        cursor: pointer;
+    }
+    
+    .alert-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .health-status {
+        padding: 5px 10px;
+        border-radius: 20px;
+        color: white;
+        font-weight: 500;
+        display: inline-block;
+        min-width: 100px;
+        text-align: center;
+    }
+    
+    .health-healthy {
+        background-color: var(--success-color);
+    }
+    
+    .health-degraded {
+        background-color: var(--warning-color);
+    }
+    
+    .health-unhealthy {
+        background-color: var(--danger-color);
+    }
+    
+    .refresh-button {
+        cursor: pointer;
+    }
+    
+    .system-metrics-card {
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">System Health</h5>
+                <span class="refresh-button" onclick="refreshSystemHealth()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>API Status:</span>
+                            <span class="health-status health-healthy" id="api-status">Healthy</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Database:</span>
+                            <span class="health-status health-healthy" id="db-status">Healthy</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Redis Cache:</span>
+                            <span class="health-status health-healthy" id="redis-status">Healthy</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Background Tasks:</span>
+                            <span class="health-status health-healthy" id="tasks-status">Healthy</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Storage:</span>
+                            <span class="health-status health-healthy" id="storage-status">Healthy</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Overall:</span>
+                            <span class="health-status health-healthy" id="overall-status">Healthy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Active Alerts</h5>
+                <a href="/admin/alerts" class="text-decoration-none">View All</a>
+            </div>
+            <div class="card-body">
+                {% if active_alerts %}
+                <div class="table-responsive">
+                    <table class="table table-hover alert-table">
+                        <thead>
+                            <tr>
+                                <th>Severity</th>
+                                <th>Alert</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in active_alerts[:5] %}
+                            <tr onclick="window.location.href='/admin/alerts#alert-{{ alert.id }}'">
+                                <td>
+                                    <span class="badge severity-{{ alert.severity }}">{{ alert.severity }}</span>
+                                </td>
+                                <td>{{ alert.name }}</td>
+                                <td class="alert-time" data-time="{{ alert.first_detected }}">
+                                    {{ alert.first_detected }}
+                                </td>
+                                <td>{{ alert.state }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    <p class="mt-2">No active alerts</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body">
+                <div class="metric-label">CPU Usage</div>
+                <div class="metric-value" id="cpu-usage">0%</div>
+                <div class="progress">
+                    <div class="progress-bar" id="cpu-progress" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body">
+                <div class="metric-label">Memory Usage</div>
+                <div class="metric-value" id="memory-usage">0%</div>
+                <div class="progress">
+                    <div class="progress-bar" id="memory-progress" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body">
+                <div class="metric-label">Disk Usage</div>
+                <div class="metric-value" id="disk-usage">0%</div>
+                <div class="progress">
+                    <div class="progress-bar" id="disk-progress" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body">
+                <div class="metric-label">API Request Rate</div>
+                <div class="metric-value" id="request-rate">0/s</div>
+                <div id="request-trend" class="small text-muted">
+                    <i class="bi bi-arrow-up"></i> 0%
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">API Request Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="requestChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Error Rate</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="errorChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Integration Health</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="integration-health-table">
+                        <thead>
+                            <tr>
+                                <th>Integration</th>
+                                <th>Status</th>
+                                <th>Latency</th>
+                                <th>Last Check</th>
+                                <th>Uptime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MOSS API</td>
+                                <td><span class="health-status health-healthy">Healthy</span></td>
+                                <td>120ms</td>
+                                <td>Just now</td>
+                                <td>99.9%</td>
+                            </tr>
+                            <tr>
+                                <td>Crisis Response</td>
+                                <td><span class="health-status health-healthy">Healthy</span></td>
+                                <td>85ms</td>
+                                <td>Just now</td>
+                                <td>99.8%</td>
+                            </tr>
+                            <tr>
+                                <td>Auth Service</td>
+                                <td><span class="health-status health-healthy">Healthy</span></td>
+                                <td>45ms</td>
+                                <td>Just now</td>
+                                <td>100%</td>
+                            </tr>
+                            <tr>
+                                <td>Notification Service</td>
+                                <td><span class="health-status health-healthy">Healthy</span></td>
+                                <td>78ms</td>
+                                <td>Just now</td>
+                                <td>99.7%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format timestamps
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeElements = document.querySelectorAll('.alert-time');
+        timeElements.forEach(el => {
+            const timestamp = el.getAttribute('data-time');
+            el.textContent = formatDateTime(timestamp);
+        });
+        
+        // Initialize charts
+        initializeCharts();
+        
+        // Start polling for metrics
+        startMetricsPolling();
+    });
+    
+    function initializeCharts() {
+        // Request chart
+        const requestCtx = document.getElementById('requestChart').getContext('2d');
+        const requestChart = new Chart(requestCtx, {
+            type: 'line',
+            data: {
+                labels: generateTimeLabels(12),
+                datasets: [{
+                    label: 'Requests per minute',
+                    data: generateRandomData(12, 50, 200),
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Error chart
+        const errorCtx = document.getElementById('errorChart').getContext('2d');
+        const errorChart = new Chart(errorCtx, {
+            type: 'line',
+            data: {
+                labels: generateTimeLabels(12),
+                datasets: [{
+                    label: 'Error rate (%)',
+                    data: generateRandomData(12, 0, 2),
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5
+                    }
+                }
+            }
+        });
+    }
+    
+    function generateTimeLabels(count) {
+        const labels = [];
+        for (let i = count - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - i * 5);
+            labels.push(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        }
+        return labels;
+    }
+    
+    function generateRandomData(count, min, max) {
+        return Array.from({ length: count }, () => Math.floor(Math.random() * (max - min + 1)) + min);
+    }
+    
+    function startMetricsPolling() {
+        // Simulate metrics updates
+        updateSystemMetrics();
+        setInterval(updateSystemMetrics, 5000);
+    }
+    
+    function updateSystemMetrics() {
+        // In a real implementation, this would fetch data from the metrics API
+        const cpuUsage = Math.floor(Math.random() * 40) + 10;
+        const memoryUsage = Math.floor(Math.random() * 30) + 20;
+        const diskUsage = Math.floor(Math.random() * 20) + 40;
+        const requestRate = Math.floor(Math.random() * 50) + 10;
+        
+        // Update DOM elements
+        document.getElementById('cpu-usage').textContent = `${cpuUsage}%`;
+        document.getElementById('cpu-progress').style.width = `${cpuUsage}%`;
+        document.getElementById('cpu-progress').className = `progress-bar ${cpuUsage > 80 ? 'bg-danger' : cpuUsage > 60 ? 'bg-warning' : 'bg-success'}`;
+        
+        document.getElementById('memory-usage').textContent = `${memoryUsage}%`;
+        document.getElementById('memory-progress').style.width = `${memoryUsage}%`;
+        document.getElementById('memory-progress').className = `progress-bar ${memoryUsage > 80 ? 'bg-danger' : memoryUsage > 60 ? 'bg-warning' : 'bg-success'}`;
+        
+        document.getElementById('disk-usage').textContent = `${diskUsage}%`;
+        document.getElementById('disk-progress').style.width = `${diskUsage}%`;
+        document.getElementById('disk-progress').className = `progress-bar ${diskUsage > 80 ? 'bg-danger' : diskUsage > 60 ? 'bg-warning' : 'bg-success'}`;
+        
+        document.getElementById('request-rate').textContent = `${requestRate}/s`;
+        
+        // Update trend indicator (random for demo)
+        const trend = Math.floor(Math.random() * 20) - 10;
+        const trendEl = document.getElementById('request-trend');
+        if (trend > 0) {
+            trendEl.innerHTML = `<i class="bi bi-arrow-up text-danger"></i> ${trend}%`;
+        } else {
+            trendEl.innerHTML = `<i class="bi bi-arrow-down text-success"></i> ${Math.abs(trend)}%`;
+        }
+    }
+    
+    function refreshSystemHealth() {
+        // In a real implementation, this would fetch health data from the API
+        // For now, just show a loading spinner and then update
+        const refreshButton = document.querySelector('.refresh-button i');
+        refreshButton.className = 'bi bi-arrow-clockwise fa-spin';
+        
+        setTimeout(() => {
+            refreshButton.className = 'bi bi-arrow-clockwise';
+            // Simulate some random health status changes
+            const statuses = document.querySelectorAll('.health-status');
+            statuses.forEach(status => {
+                const random = Math.random();
+                if (random > 0.9) {
+                    status.className = 'health-status health-degraded';
+                    status.textContent = 'Degraded';
+                } else if (random > 0.95) {
+                    status.className = 'health-status health-unhealthy';
+                    status.textContent = 'Unhealthy';
+                } else {
+                    status.className = 'health-status health-healthy';
+                    status.textContent = 'Healthy';
+                }
+            });
+        }, 1000);
+    }
+</script>
+{% endblock %}

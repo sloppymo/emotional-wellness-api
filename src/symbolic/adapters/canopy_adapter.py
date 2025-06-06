@@ -8,6 +8,8 @@ with the SYLVA symbolic processing framework.
 from typing import Dict, List, Optional, Any
 import asyncio
 from datetime import datetime
+import os
+import json
 
 from pydantic import BaseModel, Field, ConfigDict
 from structured_logging import get_logger
@@ -31,6 +33,8 @@ class CanopyInput(BaseModel):
     biomarkers: Optional[Dict[str, float]] = None
     context: Optional[Dict[str, Any]] = None
     previous_symbols: Optional[List[str]] = None
+    cultural_context: Optional[str] = Field(None, description="Cultural context for symbol interpretation")
+    visualization_format: Optional[str] = Field(None, description="Format for metaphor visualization")
 
 class CanopyOutput(BaseModel):
     """Output model for CANOPY operations."""
@@ -49,6 +53,9 @@ class CanopyOutput(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     drift_score: Optional[float] = None
     symbolic_evolution: Optional[Dict[str, Any]] = None
+    cultural_interpretations: Optional[Dict[str, Any]] = None
+    visualization_data: Optional[Dict[str, Any]] = None
+    pattern_analysis: Optional[Dict[str, Any]] = None
 
 class CanopyAdapter(SylvaAdapter[CanopyInput, CanopyOutput]):
     """
@@ -70,6 +77,28 @@ class CanopyAdapter(SylvaAdapter[CanopyInput, CanopyOutput]):
         self._canopy_processor = canopy_processor
         self._symbolic_history: Dict[str, List[SymbolicMapping]] = {}
         self._max_history_size = 50
+        self._pattern_cache: Dict[str, Dict[str, Any]] = {}
+        self._cultural_cache: Dict[str, Dict[str, Any]] = {}
+        self._cultural_symbols: Dict[str, Dict[str, Any]] = {}
+        
+        # Load cultural symbols database
+        self._load_cultural_symbols()
+    
+    def _load_cultural_symbols(self) -> None:
+        """Load cultural symbols from the database file."""
+        try:
+            symbols_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "data",
+                "cultural_symbols.json"
+            )
+            with open(symbols_path, 'r') as f:
+                self._cultural_symbols = json.load(f)
+            self._logger.info("Loaded cultural symbols database")
+        except Exception as e:
+            self._logger.error(f"Failed to load cultural symbols: {str(e)}")
+            self._cultural_symbols = {}
     
     async def _initialize_adapter(self) -> None:
         """Initialize the CANOPY processor."""
@@ -150,6 +179,25 @@ class CanopyAdapter(SylvaAdapter[CanopyInput, CanopyOutput]):
             # Store this mapping in user history
             self._store_user_mapping(request.user_id, mapping)
         
+        # Perform advanced pattern analysis
+        pattern_analysis = await self._analyze_patterns(mapping, request.user_id)
+        
+        # Apply cultural adaptations if context provided
+        cultural_interpretations = None
+        if canopy_input.cultural_context:
+            cultural_interpretations = await self._apply_cultural_adaptations(
+                mapping,
+                canopy_input.cultural_context
+            )
+        
+        # Generate visualization data if requested
+        visualization_data = None
+        if canopy_input.visualization_format:
+            visualization_data = await self._generate_visualization(
+                mapping,
+                canopy_input.visualization_format
+            )
+        
         # Convert metaphors to dictionaries for JSON serialization
         metaphor_dicts = []
         for metaphor in mapping.metaphors:
@@ -169,7 +217,10 @@ class CanopyAdapter(SylvaAdapter[CanopyInput, CanopyOutput]):
             metaphors=metaphor_dicts,
             confidence=mapping.confidence,
             drift_score=drift_score,
-            symbolic_evolution=symbolic_evolution
+            symbolic_evolution=symbolic_evolution,
+            pattern_analysis=pattern_analysis,
+            cultural_interpretations=cultural_interpretations,
+            visualization_data=visualization_data
         )
         
         self._logger.info(
@@ -180,7 +231,9 @@ class CanopyAdapter(SylvaAdapter[CanopyInput, CanopyOutput]):
                 "confidence": mapping.confidence,
                 "drift_score": drift_score,
                 "user_id": request.user_id,
-                "session_id": request.session_id
+                "session_id": request.session_id,
+                "has_cultural_adaptations": cultural_interpretations is not None,
+                "has_visualization": visualization_data is not None
             }
         )
         
@@ -357,4 +410,253 @@ class CanopyAdapter(SylvaAdapter[CanopyInput, CanopyOutput]):
             "symbolic_diversity": len(set(symbols)) / len(symbols),
             "first_mapping": history[0].timestamp,
             "last_mapping": history[-1].timestamp
-        } 
+        }
+    
+    async def _analyze_patterns(
+        self,
+        mapping: SymbolicMapping,
+        user_id: Optional[str]
+    ) -> Dict[str, Any]:
+        """
+        Perform advanced pattern analysis on symbolic mappings.
+        
+        This method identifies recurring patterns, symbolic clusters,
+        and archetypal progressions in the user's symbolic journey.
+        """
+        patterns = {
+            "recurring_symbols": [],
+            "archetypal_progression": [],
+            "symbol_clusters": [],
+            "emotional_patterns": []
+        }
+        
+        if not user_id:
+            return patterns
+            
+        history = self._get_user_history(user_id)
+        if not history:
+            return patterns
+            
+        # Analyze recurring symbols
+        symbol_counts = {}
+        for hist_mapping in history:
+            symbol = hist_mapping.primary_symbol
+            symbol_counts[symbol] = symbol_counts.get(symbol, 0) + 1
+        
+        patterns["recurring_symbols"] = [
+            {"symbol": s, "count": c}
+            for s, c in sorted(symbol_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        ]
+        
+        # Analyze archetypal progression
+        archetype_sequence = [m.archetype for m in history[-10:]]  # Last 10 archetypes
+        patterns["archetypal_progression"] = {
+            "sequence": archetype_sequence,
+            "current": mapping.archetype,
+            "suggested_next": self._predict_next_archetype(archetype_sequence)
+        }
+        
+        # Identify symbol clusters
+        patterns["symbol_clusters"] = self._identify_symbol_clusters(history)
+        
+        # Analyze emotional patterns
+        patterns["emotional_patterns"] = self._analyze_emotional_patterns(history)
+        
+        return patterns
+    
+    async def _apply_cultural_adaptations(
+        self,
+        mapping: SymbolicMapping,
+        cultural_context: str
+    ) -> Dict[str, Any]:
+        """
+        Apply cultural adaptations to symbolic interpretations.
+        
+        This method adjusts symbolic meanings based on cultural context
+        and provides culture-specific interpretations.
+        """
+        # Check cache first
+        cache_key = f"{mapping.primary_symbol}:{cultural_context}"
+        if cache_key in self._cultural_cache:
+            return self._cultural_cache[cache_key]
+            
+        interpretations = {
+            "primary_symbol": {
+                "original": mapping.primary_symbol,
+                "cultural_meaning": "",
+                "cultural_associations": [],
+                "taboos": [],
+                "alternatives": []
+            },
+            "archetype": {
+                "original": mapping.archetype,
+                "cultural_equivalent": "",
+                "cultural_variations": []
+            }
+        }
+        
+        # Get cultural symbols for the context
+        cultural_symbols = await self._get_cultural_symbols(cultural_context)
+        
+        if mapping.primary_symbol in cultural_symbols:
+            symbol_data = cultural_symbols[mapping.primary_symbol]
+            interpretations["primary_symbol"].update({
+                "cultural_meaning": symbol_data["cultural_meaning"],
+                "cultural_associations": symbol_data["cultural_associations"],
+                "taboos": symbol_data.get("taboos", []),
+                "alternatives": symbol_data["alternatives"]
+            })
+            
+            # Add archetypal resonance if available
+            if "archetypal_resonance" in symbol_data:
+                interpretations["archetype"]["cultural_variations"] = symbol_data["archetypal_resonance"]
+                # Find the closest matching archetype
+                if mapping.archetype in symbol_data["archetypal_resonance"]:
+                    interpretations["archetype"]["cultural_equivalent"] = mapping.archetype
+                else:
+                    interpretations["archetype"]["cultural_equivalent"] = symbol_data["archetypal_resonance"][0]
+        
+        # Cache the result
+        self._cultural_cache[cache_key] = interpretations
+        
+        return interpretations
+    
+    async def _generate_visualization(
+        self,
+        mapping: SymbolicMapping,
+        format: str
+    ) -> Dict[str, Any]:
+        """
+        Generate visualization data for metaphors and symbols.
+        
+        This method creates structured data that can be used to
+        visualize the symbolic and metaphorical content.
+        """
+        visualization = {
+            "format": format,
+            "elements": [],
+            "relationships": [],
+            "metadata": {}
+        }
+        
+        if format == "network":
+            # Create network visualization data
+            central_node = {
+                "id": "primary",
+                "type": "symbol",
+                "label": mapping.primary_symbol,
+                "size": 1.0
+            }
+            visualization["elements"].append(central_node)
+            
+            # Add metaphor nodes
+            for i, metaphor in enumerate(mapping.metaphors):
+                node = {
+                    "id": f"metaphor_{i}",
+                    "type": "metaphor",
+                    "label": metaphor.text,
+                    "size": metaphor.confidence
+                }
+                visualization["elements"].append(node)
+                
+                # Add relationship to primary symbol
+                visualization["relationships"].append({
+                    "source": "primary",
+                    "target": f"metaphor_{i}",
+                    "type": "expresses",
+                    "weight": metaphor.confidence
+                })
+                
+        elif format == "temporal":
+            # Create temporal visualization data
+            visualization["elements"] = [{
+                "timestamp": datetime.now().isoformat(),
+                "symbol": mapping.primary_symbol,
+                "archetype": mapping.archetype,
+                "valence": mapping.valence,
+                "arousal": mapping.arousal
+            }]
+            
+        return visualization
+    
+    def _predict_next_archetype(self, sequence: List[str]) -> str:
+        """Predict the next likely archetype in a sequence."""
+        if not sequence:
+            return "self"  # Default prediction
+            
+        # Simple Markov-chain-like prediction
+        transitions = {}
+        for i in range(len(sequence) - 1):
+            current = sequence[i]
+            next_arch = sequence[i + 1]
+            if current not in transitions:
+                transitions[current] = {}
+            transitions[current][next_arch] = transitions[current].get(next_arch, 0) + 1
+            
+        current_archetype = sequence[-1]
+        if current_archetype in transitions:
+            most_likely = max(
+                transitions[current_archetype].items(),
+                key=lambda x: x[1]
+            )[0]
+            return most_likely
+            
+        return "self"  # Default if no pattern found
+    
+    def _identify_symbol_clusters(self, history: List[SymbolicMapping]) -> List[Dict[str, Any]]:
+        """Identify clusters of related symbols in user history."""
+        clusters = []
+        
+        # Simple clustering based on common attributes
+        element_cluster = {
+            "name": "elemental",
+            "symbols": ["water", "fire", "earth", "air"],
+            "count": 0
+        }
+        
+        journey_cluster = {
+            "name": "journey",
+            "symbols": ["path", "bridge", "door", "road", "mountain"],
+            "count": 0
+        }
+        
+        for mapping in history:
+            if mapping.primary_symbol in element_cluster["symbols"]:
+                element_cluster["count"] += 1
+            if mapping.primary_symbol in journey_cluster["symbols"]:
+                journey_cluster["count"] += 1
+                
+        if element_cluster["count"] > 0:
+            clusters.append(element_cluster)
+        if journey_cluster["count"] > 0:
+            clusters.append(journey_cluster)
+            
+        return clusters
+    
+    def _analyze_emotional_patterns(self, history: List[SymbolicMapping]) -> Dict[str, Any]:
+        """Analyze patterns in emotional valence and arousal."""
+        if not history:
+            return {}
+            
+        valences = [m.valence for m in history]
+        arousals = [m.arousal for m in history]
+        
+        return {
+            "valence_trend": {
+                "mean": sum(valences) / len(valences),
+                "variance": sum((v - sum(valences)/len(valences))**2 for v in valences) / len(valences),
+                "direction": "increasing" if valences[-1] > valences[0] else "decreasing"
+            },
+            "arousal_trend": {
+                "mean": sum(arousals) / len(arousals),
+                "variance": sum((a - sum(arousals)/len(arousals))**2 for a in arousals) / len(arousals),
+                "direction": "increasing" if arousals[-1] > arousals[0] else "decreasing"
+            }
+        }
+    
+    async def _get_cultural_symbols(self, cultural_context: str) -> Dict[str, Any]:
+        """Retrieve cultural symbol mappings."""
+        if not cultural_context or cultural_context not in self._cultural_symbols:
+            return {}
+        
+        return self._cultural_symbols[cultural_context] 

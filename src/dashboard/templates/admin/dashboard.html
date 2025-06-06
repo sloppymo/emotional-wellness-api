@@ -1,0 +1,380 @@
+{% extends "admin/base.html" %}
+
+{% block extra_css %}
+<style>
+    .summary-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s;
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .summary-card i {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        font-size: 3rem;
+        opacity: 0.3;
+    }
+    
+    .summary-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .summary-card .label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .summary-card.primary {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+    
+    .summary-card.success {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+    
+    .summary-card.warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+    
+    .summary-card.danger {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .quick-action {
+        padding: 15px;
+        border-radius: 10px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: #333;
+    }
+    
+    .quick-action:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        color: var(--primary-color);
+    }
+    
+    .quick-action i {
+        font-size: 1.5rem;
+        margin-right: 15px;
+        color: var(--primary-color);
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-left: 3px solid var(--primary-color);
+        background-color: white;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+    
+    .activity-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .activity-description {
+        font-size: 0.9rem;
+    }
+    
+    .hipaa-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .hipaa-compliant {
+        background-color: rgba(46, 204, 113, 0.2);
+        color: #27ae60;
+    }
+    
+    .hipaa-warning {
+        background-color: rgba(243, 156, 18, 0.2);
+        color: #e67e22;
+    }
+    
+    .hipaa-violation {
+        background-color: rgba(231, 76, 60, 0.2);
+        color: #c0392b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="summary-card primary">
+            <div class="value">{{ active_alerts|default(0) }}</div>
+            <div class="label">Active Alerts</div>
+            <i class="bi bi-bell"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card success">
+            <div class="value">99.8%</div>
+            <div class="label">API Uptime</div>
+            <i class="bi bi-arrow-up-circle"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card warning">
+            <div class="value">1.2%</div>
+            <div class="label">Error Rate</div>
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card danger">
+            <div class="value">0</div>
+            <div class="label">Security Incidents</div>
+            <i class="bi bi-shield"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">System Overview</h5>
+                <div class="hipaa-status hipaa-compliant">
+                    <i class="bi bi-shield-check"></i> HIPAA Compliant
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="requestChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="resourceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6>Integration Health</h6>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Status</th>
+                                        <th>Response Time</th>
+                                        <th>Last Check</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>MOSS API</td>
+                                        <td><span class="badge bg-success">Healthy</span></td>
+                                        <td>120ms</td>
+                                        <td>Just now</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Crisis Response</td>
+                                        <td><span class="badge bg-success">Healthy</span></td>
+                                        <td>85ms</td>
+                                        <td>Just now</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Auth Service</td>
+                                        <td><span class="badge bg-success">Healthy</span></td>
+                                        <td>45ms</td>
+                                        <td>Just now</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Notification Service</td>
+                                        <td><span class="badge bg-success">Healthy</span></td>
+                                        <td>78ms</td>
+                                        <td>Just now</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="/admin/monitoring" class="quick-action">
+                    <i class="bi bi-graph-up"></i>
+                    <div>
+                        <div class="fw-bold">System Monitoring</div>
+                        <div class="small text-muted">View detailed system metrics</div>
+                    </div>
+                </a>
+                <a href="/admin/alerts" class="quick-action">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <div>
+                        <div class="fw-bold">Manage Alerts</div>
+                        <div class="small text-muted">View and respond to system alerts</div>
+                    </div>
+                </a>
+                <a href="/admin/integrations" class="quick-action">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <div>
+                        <div class="fw-bold">Integration Status</div>
+                        <div class="small text-muted">Check external service connections</div>
+                    </div>
+                </a>
+                <a href="/admin/tasks" class="quick-action">
+                    <i class="bi bi-list-task"></i>
+                    <div>
+                        <div class="fw-bold">Background Tasks</div>
+                        <div class="small text-muted">Monitor async task processing</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="activity-item">
+                    <div class="activity-time">Just now</div>
+                    <div class="activity-title">System Check Completed</div>
+                    <div class="activity-description">All systems operating normally</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">10 minutes ago</div>
+                    <div class="activity-title">Alert Resolved</div>
+                    <div class="activity-description">High memory usage alert resolved automatically</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">1 hour ago</div>
+                    <div class="activity-title">Metrics Collection Started</div>
+                    <div class="activity-description">Enhanced metrics collection service activated</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">2 hours ago</div>
+                    <div class="activity-title">System Update</div>
+                    <div class="activity-description">Monitoring system upgraded to latest version</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts
+        initializeCharts();
+    });
+    
+    function initializeCharts() {
+        // Request chart
+        const requestCtx = document.getElementById('requestChart').getContext('2d');
+        const requestChart = new Chart(requestCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'API Requests',
+                    data: [120, 190, 300, 510, 600, 430],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'API Requests (24h)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Resource chart
+        const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+        const resourceChart = new Chart(resourceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['CPU', 'Memory', 'Disk', 'Network'],
+                datasets: [{
+                    label: 'Current Usage (%)',
+                    data: [35, 65, 40, 25],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(155, 89, 182, 0.7)',
+                        'rgba(52, 73, 94, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(52, 152, 219, 1)',
+                        'rgba(46, 204, 113, 1)',
+                        'rgba(155, 89, 182, 1)',
+                        'rgba(52, 73, 94, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'System Resources'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

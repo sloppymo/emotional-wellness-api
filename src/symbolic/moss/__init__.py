@@ -19,6 +19,9 @@ Key Features:
 - Safety orchestration
 """
 
+# Core processor
+from .processor import MossProcessor, get_moss_processor
+
 # Core crisis detection
 from .crisis_classifier import (
     CrisisClassifier,
@@ -29,6 +32,9 @@ from .crisis_classifier import (
     assess_crisis_risk,
     create_crisis_context
 )
+
+# For backward compatibility
+RiskSeverity = CrisisSeverity  # Alias for backward compatibility
 
 # Threshold management
 from .detection_thresholds import (
@@ -69,9 +75,189 @@ from .prompt_templates import (
 )
 
 __all__ = [
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
     # Crisis classifier
     "CrisisClassifier",
-    "CrisisSeverity", 
+    "CrisisSeverity",
+    "RiskSeverity",  # Added for backward compatibility
     "RiskDomain",
     "CrisisContext",
     "RiskAssessment",

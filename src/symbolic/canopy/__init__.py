@@ -1,21 +1,18 @@
 """
-CANOPY: Enhanced metaphor extraction and symbolic processing package.
+CANOPY: Cognitive Analysis and Natural Observation Processing sYstem
+A symbolic processing system for emotional wellness analysis.
 """
 
 from .metaphor_extraction import (
-    EnhancedMetaphorExtractor,
-    MetaphorCache,
-    FallbackMetaphorExtractor,
-    PromptTemplates,
-    MetaphorDomain,
-    MetaphorTheme
+    MetaphorExtractor,
+    EmotionalMetaphor,
+    SymbolicMapping
 )
+from .processor import CanopyProcessor
 
 __all__ = [
-    "EnhancedMetaphorExtractor",
-    "MetaphorCache", 
-    "FallbackMetaphorExtractor",
-    "PromptTemplates",
-    "MetaphorDomain",
-    "MetaphorTheme"
-] 
+    'MetaphorExtractor',
+    'EmotionalMetaphor',
+    'SymbolicMapping',
+    'CanopyProcessor'
+]

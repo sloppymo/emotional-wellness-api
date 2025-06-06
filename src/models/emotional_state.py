@@ -12,21 +12,26 @@ from pydantic import BaseModel, Field, UUID4
 from uuid import uuid4
 
 class EmotionalMetaphor(BaseModel):
-    """A metaphorical expression identified in user input"""
-    text: str = Field(..., description="The metaphorical text or phrase")
-    symbol: str = Field(..., description="The symbolic representation of the metaphor")
-    confidence: float = Field(..., description="Confidence score for the metaphor extraction")
+    """Represents an emotional metaphor extracted from text."""
+    text: str
+    symbol: str
+    confidence: float
 
 class SymbolicMapping(BaseModel):
-    """Mapping of user input to symbolic representations and archetypes"""
-    primary_symbol: str = Field(..., description="Primary symbolic representation")
-    archetype: str = Field(..., description="Primary Jungian archetype identified")
-    alternative_symbols: List[str] = Field(default_factory=list, description="Alternative symbolic representations")
-    valence: float = Field(..., description="Emotional valence from -1.0 (negative) to 1.0 (positive)")
-    arousal: float = Field(..., description="Emotional arousal from 0.0 (calm) to 1.0 (excited)")
-    metaphors: List[EmotionalMetaphor] = Field(default_factory=list, description="Metaphors extracted from input")
-    timestamp: datetime = Field(default_factory=datetime.now, description="When the mapping was created")
-    confidence: float = Field(default=0.8, description="Overall confidence in the symbolic mapping")
+    """Represents a symbolic mapping of emotional content."""
+    primary_symbol: str
+    archetype: str
+    alternative_symbols: List[str]
+    valence: float  # -1.0 to 1.0
+    arousal: float  # 0.0 to 1.0
+    metaphors: List[EmotionalMetaphor]
+    confidence: float = 1.0
+    timestamp: Optional[datetime] = None
+
+    def __init__(self, **data):
+        if 'timestamp' not in data:
+            data['timestamp'] = datetime.utcnow()
+        super().__init__(**data)
 
 class SafetyStatus(BaseModel):
     """Evaluation of potential crisis indicators and safety concerns"""

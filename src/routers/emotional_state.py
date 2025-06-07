@@ -3,6 +3,8 @@ Emotional State Router
 
 This module provides API endpoints for processing emotional state inputs,
 extracting symbolic mappings, and executing the VELURIA protocol when needed.
+
+main entry point for all the emotional processing. this is where the magic happens
 """
 
 import hashlib
@@ -19,9 +21,9 @@ from models.emotional_state import (
     EmotionalState,
     SafetyStatus
 )
-from symbolic.canopy import get_canopy_processor
-from symbolic.moss.processor import get_moss_processor
-from symbolic.veluria import get_veluria_protocol
+from symbolic.canopy import get_canopy_processor    # symbolic meaning extraction
+from symbolic.moss.processor import get_moss_processor  # safety evaluation
+from symbolic.veluria import get_veluria_protocol  # crisis intervention
 from security.auth import get_current_user_with_scope
 from src.symbolic.moss import RiskAssessment, CrisisContext
 from structured_logging import get_logger
@@ -31,6 +33,7 @@ logger = get_logger(__name__)
 
 # In-memory cache of recent emotional states per user
 # In production, this would use Redis or another distributed cache
+# keeping it simple for now but this doesn't scale
 user_emotional_history: Dict[str, List[EmotionalState]] = {}
 
 @router.post("/emotional-state", response_model=EmotionalStateResponse)
@@ -44,44 +47,47 @@ async def process_emotional_state(
     Process emotional input text, extract symbolic meaning, and evaluate safety
     
     This endpoint:
-    1. Processes text through CANOPY to extract symbolic meaning
-    2. Checks previous emotional states to calculate drift
-    3. Evaluates safety with MOSS
-    4. Executes VELURIA protocol if necessary
-    5. Returns symbolic representation and safety status
+    1. Processes text through CANOPY to extract symbolic meaning - turn words into symbols
+    2. Checks previous emotional states to calculate drift - how much they've changed
+    3. Evaluates safety with MOSS - check if they're in crisis
+    4. Executes VELURIA protocol if necessary - get them help
+    5. Returns symbolic representation and safety status - tell the frontend what's up
+    
+    this is the main pipeline. if this breaks, nothing works
     """
     logger.info(f"Processing emotional state for user {input_data.user_id}, session {input_data.session_id}")
     
-    # Get processors
-    canopy = get_canopy_processor()
-    moss = get_moss_processor()
-    veluria = get_veluria_protocol()
+    # Get processors - these are the worker modules
+    canopy = get_canopy_processor()  # symbolic extraction
+    moss = get_moss_processor()      # safety check
+    veluria = get_veluria_protocol() # crisis response
     
     try:
-        # Process through CANOPY
+        # Process through CANOPY - turn text into symbols and meaning
         symbolic_mapping = await canopy.extract(
             input_data.text,
-            input_data.biomarkers,
-            input_data.context
+            input_data.biomarkers,  # heart rate, etc if available
+            input_data.context      # time of day, location, etc
         )
         
-        # Get previous emotional states for this user
+        # Get previous emotional states for this user - need history for drift calculation
         previous_states = get_user_emotional_history(input_data.user_id)
         
-        # Calculate drift if we have previous states
+        # Calculate drift if we have previous states - how much have they changed
         drift_index = 0.0
         if previous_states:
             drift_index = canopy.calculate_drift(symbolic_mapping, previous_states)
         
-        # Evaluate safety with MOSS
+        # Evaluate safety with MOSS - check if they need help now
         safety_status = moss.evaluate(
             symbolic_mapping,
             input_data.text,
             input_data.biomarkers
         )
         
-        # Execute VELURIA protocol based on safety status
-        if safety_status.level > 0:
+        # Execute VELURIA protocol based on safety status - get help if needed
+        # run in background so we don't slow down the response
+        if safety_status.level > 0:  # any safety concern triggers protocol
             background_tasks.add_task(
                 execute_veluria,
                 input_data.user_id,
@@ -89,21 +95,21 @@ async def process_emotional_state(
                 {"session_id": input_data.session_id}
             )
         
-        # Create response object
+        # Create response object - what we send back to the client
         response = EmotionalStateResponse(
-            symbolic_anchor=symbolic_mapping.primary_symbol,
-            alternatives=symbolic_mapping.alternative_symbols,
-            archetype=symbolic_mapping.archetype,
-            drift_index=drift_index,
+            symbolic_anchor=symbolic_mapping.primary_symbol,     # main symbol
+            alternatives=symbolic_mapping.alternative_symbols,   # other possibilities
+            archetype=symbolic_mapping.archetype,               # jungian archetype
+            drift_index=drift_index,                            # how much they've changed
             safety_status={
-                "level": safety_status.level,
-                "triggers": safety_status.triggers,
-                "recommended_actions": safety_status.recommended_actions
+                "level": safety_status.level,                   # 0-3 safety level
+                "triggers": safety_status.triggers,             # what set off alarms
+                "recommended_actions": safety_status.recommended_actions  # what to do
             },
             content=generate_response_content(symbolic_mapping, safety_status, drift_index)
         )
         
-        # Store emotional state in history (in background)
+        # Store emotional state in history (in background) - don't slow down response
         background_tasks.add_task(
             store_emotional_state,
             input_data,
@@ -116,12 +122,13 @@ async def process_emotional_state(
         
     except Exception as e:
         logger.error(f"Error processing emotional state: {str(e)}")
+        # hide implementation details from client
         raise HTTPException(status_code=500, detail="Error processing emotional input")
 
 @router.get("/emotional-state/history/{user_id}", response_model=List[Dict[str, Any]])
 async def get_emotional_history(
     user_id: str,
-    limit: int = 10,
+    limit: int = 10,  # default to 10 most recent
     user = Depends(get_current_user_with_scope(["emotional_history"]))
 ):
     """
@@ -129,9 +136,11 @@ async def get_emotional_history(
     
     This endpoint returns a sanitized version of emotional state history,
     with all PHI removed for HIPAA compliance.
+    
+    users can only see their own data unless they're admin
     """
     # Authorization check - user can only see their own data
-    # unless they have admin privileges
+    # unless they have admin privileges - privacy protection
     if user.id != user_id and "admin" not in user.scopes:
         raise HTTPException(status_code=403, detail="Not authorized to access this data")
     
@@ -140,24 +149,25 @@ async def get_emotional_history(
     # Return most recent entries first, limited to requested amount
     sanitized_history = []
     for state in sorted(history, key=lambda x: x.timestamp, reverse=True)[:limit]:
+        # only return safe data - no raw text or identifying info
         sanitized_history.append({
             "timestamp": state.timestamp,
-            "primary_symbol": state.primary_symbol,
-            "archetype": state.archetype,
-            "valence": state.valence,
-            "arousal": state.arousal,
-            "drift_index": state.drift_index,
-            "safety_level": state.safety_level
+            "primary_symbol": state.primary_symbol,    # safe to show
+            "archetype": state.archetype,              # safe to show
+            "valence": state.valence,                  # numeric values ok
+            "arousal": state.arousal,                  # numeric values ok
+            "drift_index": state.drift_index,          # calculated metric
+            "safety_level": state.safety_level         # important for tracking
         })
     
     return sanitized_history
 
 def get_user_emotional_history(user_id: str) -> List[EmotionalState]:
-    """Get emotional state history for a user from cache"""
+    """Get emotional state history for a user from cache - simple lookup"""
     return user_emotional_history.get(user_id, [])
 
 async def execute_veluria(user_id: str, safety_status: SafetyStatus, context: Dict[str, Any]):
-    """Execute VELURIA protocol in background task"""
+    """Execute VELURIA protocol in background task - crisis intervention"""
     veluria = get_veluria_protocol()
     intervention = veluria.execute_protocol(user_id, safety_status, context)
     logger.info(f"VELURIA protocol executed for user {user_id} at level {intervention.level}")
@@ -168,34 +178,35 @@ async def store_emotional_state(
     safety_status: SafetyStatus,
     drift_index: float
 ):
-    """Store emotional state in history and database"""
+    """Store emotional state in history and database - background task to not slow down response"""
     # Hash the input text for reference without storing raw text
     # In production, use a secure salted hash with proper key management
+    # we never store the actual text - privacy protection
     text_hash = hashlib.sha256(input_data.text.encode()).hexdigest()
     
-    # Create emotional state record
+    # Create emotional state record - what we keep for analysis
     state = EmotionalState(
         user_id=input_data.user_id,
         session_id=input_data.session_id,
-        valence=symbolic_mapping.valence,
-        arousal=symbolic_mapping.arousal,
-        primary_symbol=symbolic_mapping.primary_symbol,
-        alternative_symbols=symbolic_mapping.alternative_symbols,
-        archetype=symbolic_mapping.archetype,
-        drift_index=drift_index,
-        safety_level=safety_status.level,
-        input_text_hash=text_hash,
+        valence=symbolic_mapping.valence,                # happiness/sadness
+        arousal=symbolic_mapping.arousal,                # energy level
+        primary_symbol=symbolic_mapping.primary_symbol,  # main symbol
+        alternative_symbols=symbolic_mapping.alternative_symbols,  # other options
+        archetype=symbolic_mapping.archetype,            # jungian archetype
+        drift_index=drift_index,                         # change from baseline
+        safety_level=safety_status.level,                # crisis level
+        input_text_hash=text_hash,                       # reference without storing text
         metadata={
-            "triggers": safety_status.triggers,
-            "risk_score": safety_status.risk_score,
+            "triggers": safety_status.triggers,          # what triggered alerts
+            "risk_score": safety_status.risk_score,      # numeric risk
         }
     )
     
-    # Update in-memory cache
+    # Update in-memory cache - add to user's history
     if input_data.user_id not in user_emotional_history:
         user_emotional_history[input_data.user_id] = []
     
-    # Add to front of list to keep most recent first
+    # Add to front of list to keep most recent first - chronological order
     user_emotional_history[input_data.user_id].insert(0, state)
     
     # Limit cache size per user

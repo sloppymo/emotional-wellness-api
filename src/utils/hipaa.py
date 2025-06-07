@@ -1,6 +1,15 @@
 """
 HIPAA compliance utilities for the CANOPY system.
 """
+#  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#  ┃                               ┃
+#  ┃  If this code works,          ┃
+#  ┃  it was written by me.        ┃
+#  ┃                               ┃
+#  ┃  If it doesn't work,          ┃
+#  ┃  I don't know who wrote it.   ┃
+#  ┃                               ┃
+#  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 import re
 from datetime import datetime

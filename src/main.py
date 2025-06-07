@@ -7,6 +7,12 @@ routes, and dependencies.
 
 honestly most of this is middleware hell for hipaa compliance. proceed with caution
 """
+#  ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+#  ⚠️                        ⚠️
+#  ⚠️  HERE BE DRAGONS       ⚠️
+#  ⚠️  MODIFY AT YOUR PERIL  ⚠️
+#  ⚠️                        ⚠️
+#  ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
 
 import logging
 import os

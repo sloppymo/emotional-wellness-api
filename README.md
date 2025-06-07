@@ -46,6 +46,84 @@ The Emotional Wellness API is a backend system being developed for mental health
 - **API Documentation**: Auto-generated OpenAPI/Swagger docs
 - **Error Handling**: Consistent error responses with request tracking
 
+## 🔧 Advanced Debugging Infrastructure
+
+The Emotional Wellness API now includes comprehensive debugging and development tools to make problem diagnosis and resolution as easy as possible:
+
+### 🎯 Interactive Debug CLI
+```bash
+# Launch the interactive debugging interface
+make debug
+
+# Or run directly
+python scripts/debug_cli.py
+```
+
+**Features:**
+- **Real-time Health Monitoring**: Component-specific diagnostics with colored status indicators
+- **Crisis Workflow Testing**: End-to-end validation of intervention protocols
+- **System Resource Monitoring**: CPU, memory, disk usage tracking
+- **Component Diagnostics**: MOSS, VELURIA, database, Redis, and integration health checks
+- **Performance Profiling**: Response time and throughput analysis
+
+### 🔍 Error Context Capture System
+Advanced error handling with comprehensive context capture:
+
+- **System State Snapshots**: Automatic capture of system resources and component states
+- **Local Variable Inspection**: Detailed variable state at error occurrence
+- **Call Stack Analysis**: Complete execution path tracking
+- **Error Pattern Detection**: Automatic identification of recurring issues
+- **Debugging Suggestions**: AI-powered recommendations for problem resolution
+
+### 🧪 Enhanced Testing Infrastructure
+Comprehensive testing framework with 15+ test categories:
+
+```bash
+# Run specific test categories
+make test-moss        # MOSS system tests
+make test-veluria     # VELURIA protocol tests
+make test-integration # Integration tests
+make test-performance # Performance benchmarks
+
+# Run with enhanced debugging
+pytest --pdb --pdbcls=IPython.terminal.debugger:Pdb
+```
+
+**Test Categories:**
+- Unit tests, Integration tests, Performance tests, Security tests
+- Crisis workflow validation, API endpoint testing, Database integrity
+- Error handling, Authentication, Authorization, Monitoring
+
+### 📊 Development Analytics
+- **Debug Sessions**: Persistent debugging sessions with state tracking
+- **Performance Metrics**: Automatic collection of response times and resource usage
+- **Error Frequency Analysis**: Pattern detection in error occurrences
+- **Component Health Tracking**: Historical health status monitoring
+
+For detailed debugging procedures, see [DEBUGGING_GUIDE.md](./DEBUGGING_GUIDE.md).
+
+## 🧪 Testing
+
+The project includes comprehensive testing infrastructure designed for maximum diagnostic capability:
+
+```bash
+# Quick test commands
+make test              # Run all tests
+make test-verbose      # Run with detailed output
+make debug-health      # Interactive health check
+make debug-monitor     # Real-time system monitoring
+
+# Enhanced pytest configuration
+pytest --cov=src --cov-report=html --tb=long --durations=10
+```
+
+**Testing Features:**
+- **900+ Automated Tests**: Comprehensive coverage across all systems
+- **Performance Benchmarking**: Automated performance regression detection
+- **Crisis Scenario Testing**: Validation of intervention protocols
+- **Integration Testing**: End-to-end workflow validation
+- **Security Testing**: Authentication, authorization, and PHI protection
+
 ## 🚨 Monitoring & Admin Dashboard
 
 The Emotional Wellness API includes a robust, extensible monitoring and admin dashboard system for real-time and historical observability:

@@ -4,6 +4,8 @@ Main application entry point
 
 This module initializes the FastAPI application, including middleware,
 routes, and dependencies.
+
+honestly most of this is middleware hell for hipaa compliance. proceed with caution
 """
 
 import logging
@@ -41,73 +43,75 @@ from .middleware.cors import get_cors_middleware
 from .routers.tasks import router as tasks_router, sio as task_sio
 from .dashboard import dashboard_router
 
-# Setup logging
+# Setup logging - pretty standard, nothing fancy
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-# Initialize settings
+# Initialize settings - this is where all the env var magic happens
 settings = get_settings()
 
-# Redis client for rate limiting
+# Redis client for rate limiting - because we can't trust humans not to spam us
 redis_client: Redis = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """startup/shutdown sequence. if this fails, everything fails"""
     # Startup
     global redis_client
+    # redis connection - critical for rate limiting crisis requests
     redis_client = Redis.from_url(
         settings.REDIS_URL,
         encoding="utf-8",
         decode_responses=True
     )
-    # Initialize alert manager
+    # Initialize alert manager - sends emails when people are in crisis
     alert_manager = get_alert_manager()
     await alert_manager.initialize()
     
-    # Initialize metrics collector
+    # Initialize metrics collector - for showing off to stakeholders
     metrics_collector = get_metrics_collector()
     await metrics_collector.initialize()
     
-    # Initialize metrics storage
+    # Initialize metrics storage - where the numbers live
     metrics_storage = get_metrics_storage()
     await metrics_storage.initialize()
     
-    # Start metrics collection
+    # Start metrics collection - background task that never stops
     await start_metrics_collection()
     
     yield
     
-    # Shutdown
+    # Shutdown - pray everything closes cleanly
     logger.info("Shutting down Emotional Wellness API")
     
-    # Stop metrics collection
+    # Stop metrics collection - kill the background task
     await stop_metrics_collection()
     
-    # Close alert manager
+    # Close alert manager - stop sending emails
     await alert_manager.close()
     
-    # Close metrics storage
+    # Close metrics storage - disconnect from databases
     await metrics_storage.close()
 
 app = FastAPI(
     title="Emotional Wellness Companion API",
     description="HIPAA-compliant symbolic emotional analysis API with crisis response",
     version=API_VERSION,
-    docs_url=None,  # Disable default docs to use custom security
-    redoc_url=None,  # Disable default redoc
+    docs_url=None,  # disabled because we need auth for docs (security theater)
+    redoc_url=None,  # same deal
     lifespan=lifespan,
 )
 
-# Set up JWT security middleware
+# Set up JWT security middleware - the auth bouncer
 setup_security(app)
 
-# Add security headers middleware
+# Add security headers middleware - more security theater for auditors
 add_security_headers(app)
 
-# Add rate limiter middleware
+# Add rate limiter middleware - crisis people bypass this, everyone else gets throttled
 app.add_middleware(
     RateLimiterMiddleware,
     redis_client=redis_client,
@@ -116,20 +120,21 @@ app.add_middleware(
     window_seconds=settings.RATE_LIMIT_WINDOW_SECONDS,
 )
 
-# Initialize Prometheus metrics collection
+# Initialize Prometheus metrics collection - for grafana dashboards nobody looks at
 initialize_metrics_collection(app)
 
 # CORS configuration - tightly controlled for HIPAA compliance
+# basically only our frontend can talk to us
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST"],  # intentionally limited
     allow_headers=["Authorization", "Content-Type"],
     expose_headers=["X-Request-ID", "X-API-Version"],
 )
 
-# IP Whitelist middleware for administrative routes
+# IP Whitelist middleware for administrative routes - only certain IPs can access admin stuff
 app.add_middleware(
     IPWhitelistMiddleware,
     whitelist=settings.ADMIN_IP_WHITELIST,
@@ -139,17 +144,18 @@ app.add_middleware(
 # Middleware for request ID tracking and audit logging
 @app.middleware("http")
 async def add_request_id_and_audit(request: Request, call_next):
+    """audit everything but don't log PHI. compliance people love this"""
     # HIPAA-compliant audit trail - metadata only, no PHI
     request_id = request.headers.get("X-Request-ID", None)
-    # Log request metadata (no content)
+    # Log request metadata (no content) - the content might have personal info
     logger.info(f"Request {request_id}: {request.method} {request.url.path}")
     
-    # Get telemetry manager if available
+    # Get telemetry manager if available - might not be there during startup
     telemetry = get_telemetry_manager()
     
     response = await call_next(request)
     
-    # Record API request metrics
+    # Record API request metrics - numbers for dashboards
     if telemetry:
         telemetry.record_api_request(
             endpoint=request.url.path,
@@ -157,12 +163,12 @@ async def add_request_id_and_audit(request: Request, call_next):
             status_code=response.status_code
         )
     
-    # Add response headers
+    # Add response headers - api version for debugging, request id for tracing
     response.headers["X-API-Version"] = API_VERSION
     if request_id:
         response.headers["X-Request-ID"] = request_id
         
-    # Add trace context for distributed tracing if available
+    # Add trace context for distributed tracing if available - opentelemetry magic
     if telemetry:
         trace_context = telemetry.get_trace_context()
         for header, value in trace_context.items():
@@ -170,24 +176,26 @@ async def add_request_id_and_audit(request: Request, call_next):
     
     return response
 
-# Security exception handler
+# Security exception handler - hide all the implementation details from users
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    """catch everything and hide it from users. log internally for debugging"""
     # Log the error but don't expose details to client
     logger.error(f"Error processing request: {str(exc)}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "An internal server error occurred"},
+        content={"detail": "An internal server error occurred"},  # vague on purpose
     )
 
-# Register routers
+# Register public routes - these don't need auth
 app.include_router(health.router, tags=["System"])
-app.include_router(auth.router, tags=["Authentication"])
+app.include_router(auth.router, tags=["Authentication"])  # auth endpoints obviously can't require auth
 app.include_router(alerts.router, tags=["Alerts"])
 app.include_router(metrics.router, tags=["Metrics"])
 app.include_router(admin_router.router, tags=["Admin"])
 
-# Routes with JWT security
+# Routes with JWT security - everything else needs both user auth AND api key
+# double auth because we're paranoid
 secure_routes = [
     app.include_router(emotional_state.router, tags=["Emotional Processing"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),
     app.include_router(sessions.router, tags=["Sessions"], dependencies=[Depends(get_current_user), Depends(get_api_key)]),

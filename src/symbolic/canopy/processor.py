@@ -12,6 +12,39 @@ from .metaphor_extraction import MetaphorExtractor, SymbolicMapping
 
 logger = get_logger(__name__)
 
+# Jungian archetypes for symbolic processing
+JUNGIAN_ARCHETYPES = [
+    "self",
+    "shadow",
+    "anima",
+    "animus",
+    "persona",
+    "hero",
+    "mentor",
+    "trickster",
+    "sage",
+    "mother",
+    "father",
+    "child",
+    "maiden",
+    "wise_old_man",
+    "wise_old_woman"
+]
+
+# Symbol categories for classification
+SYMBOL_CATEGORIES = [
+    "natural_elements",
+    "animals",
+    "plants",
+    "landscapes",
+    "weather",
+    "celestial",
+    "mythical",
+    "archetypal",
+    "cultural",
+    "personal"
+]
+
 async def get_veluria_data(text: str, user_id: str) -> Dict[str, Any]:
     """Get crisis indicators from VELURIA system."""
     # TODO: Implement actual VELURIA integration

@@ -1,3 +1,11 @@
+#  ░░░░░░░░░░░░░░░░░░░░
+#  ░░ 01001011 11001 ░░
+#  ░░ 10011010 01101 ░░
+#  ░░ 11010100 110011░░
+#  ░░ 01101101 101001░░
+#  ░░░░░░░░░░░░░░░░░░░░
+#   THE CODE RUNS DEEP
+
 from typing import Optional, Tuple, Dict, Any, List
 from datetime import datetime, timedelta
 import time

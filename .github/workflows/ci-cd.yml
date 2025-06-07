@@ -305,13 +305,12 @@ jobs:
     name: Send Deployment Notification
     needs: [deploy, compliance-check]
     runs-on: ubuntu-latest
-    # Only run if SLACK_WEBHOOK_URL is defined
-    if: ${{ always() && secrets.SLACK_WEBHOOK_URL != '' }}
+    if: ${{ always() }}
     steps:
       - name: Send deployment notification
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "Deployment Status: ${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}",

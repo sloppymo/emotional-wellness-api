@@ -2,6 +2,12 @@
 ROOT Subsystem Analysis
 Longitudinal Emotional State Mapping and Archetype Identification
 """
+#
+#  /\_/\
+# / o o \
+# \~(*)~/
+#  " " "
+# 
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from enum import Enum

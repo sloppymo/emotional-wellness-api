@@ -4,7 +4,13 @@ Security router for the Emotional Wellness API.
 Provides endpoints for security scanning and reporting to support HIPAA compliance
 and security hardening efforts.
 """
-
+#
+#    ___
+#   //_\\
+#  | o o |
+#  |  ω  |
+#  |__U__|
+#
 from typing import Dict, Any
 from datetime import datetime
 import json

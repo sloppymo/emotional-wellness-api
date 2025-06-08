@@ -3,7 +3,13 @@ Alerts Router
 
 Provides API endpoints for viewing and managing system alerts.
 """
-
+#
+#    /\/\
+#   / o o\
+#  |  ▽   |
+#   \ ⌣  /
+#    \\//
+#
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel
@@ -235,7 +241,16 @@ async def silence_alert(
     except Exception as e:
         logger.error(f"Failed to silence alert {alert_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to silence alert: {str(e)}")
-
+#       o
+#        o       /\
+#         o     /  \
+#              /    \
+#             /      \
+#            /        \
+# ______~*_/__________\_*~______
+# I WAS HERE DEBUGGING AT 1AM
+# THIS IS MY MONUMENT
+#
 @router.get("/history/{rule_id}", response_model=List[AlertResponse])
 async def get_alert_history(
     rule_id: str = Path(..., description="ID of the alert rule to get history for"),

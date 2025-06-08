@@ -13,7 +13,12 @@ Key features:
 
 most of this is statistical theater but it does spot actual patterns sometimes
 """
-
+#
+#   __
+#  (oo)____
+#  (__)    )\ 
+#     ||--|| *
+# 
 import numpy as np
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta

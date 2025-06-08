@@ -310,7 +310,7 @@ jobs:
       - name: Send deployment notification
         uses: slackapi/slack-github-action@v1.24.0
         with:
-        webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "Deployment Status: ${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}",

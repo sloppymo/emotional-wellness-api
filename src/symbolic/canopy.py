@@ -322,3 +322,11 @@ def get_canopy_processor():
     if _instance is None:
         _instance = CanopyProcessor()
     return _instance
+
+
+# 
+#    ,_,
+#   (O,O)
+#   (   )
+#  --"-"--
+#

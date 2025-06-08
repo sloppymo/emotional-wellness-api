@@ -11,6 +11,15 @@ from src.utils.structured_logging import get_logger
 from .metaphor_extraction import MetaphorExtractor, SymbolicMapping
 
 logger = get_logger(__name__)
+#       o
+#        o       /\
+#         o     /  \
+#              /    \
+#             /      \
+#            /        \
+# ______~*_/__________\_*~______
+# I WAS HERE DEBUGGING AT 3AM
+# THIS IS MY MONUMENT
 
 # Jungian archetypes for symbolic processing
 JUNGIAN_ARCHETYPES = [

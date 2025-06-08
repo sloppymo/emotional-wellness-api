@@ -9,7 +9,15 @@ with three progressive intervention levels:
 
 basically the "oh shit someone needs help" system
 """
-
+#
+#    .--.
+#   |o_o |
+#   |:_/ |
+#  //   \ \
+# (|     | )
+# /'\_   _/`\
+# \___)=(___/
+# 
 import logging
 import uuid
 from typing import Dict, List, Optional, Any

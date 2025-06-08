@@ -56,6 +56,8 @@ from routers import (
     alerts,
     metrics,
 )
+from accessibility.router import router as accessibility_router
+from accessibility.integration import register_accessibility_features
 from integration import router as integration_router
 from dashboard import admin_router
 from security.auth import get_api_key
@@ -154,6 +156,9 @@ app.add_middleware(
 # Initialize Prometheus metrics collection - for grafana dashboards nobody looks at
 initialize_metrics_collection(app)
 
+# Register accessibility features - middleware and router
+register_accessibility_features(app)
+
 # CORS configuration - tightly controlled for HIPAA compliance
 # basically only our frontend can talk to us
 app.add_middleware(
@@ -221,6 +226,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 # Register public routes - these don't need auth
 app.include_router(health.router, tags=["System"])
+app.include_router(accessibility_router, prefix="/accessibility", tags=["Accessibility"])
 app.include_router(
     auth.router, tags=["Authentication"]
 )  # auth endpoints obviously can't require auth

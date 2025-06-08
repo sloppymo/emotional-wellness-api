@@ -3,7 +3,13 @@ Authentication router for Emotional Wellness API.
 
 Provides endpoints for JWT token generation, validation, and revocation.
 """
-
+#
+#    /\
+#   /  \
+#  | .. |
+#  | (O)|
+#   \__/
+#
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field, EmailStr, ConfigDict

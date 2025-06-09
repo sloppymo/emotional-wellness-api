@@ -1,0 +1,50 @@
+{
+  "max_iterations": 20,
+  "min_test_coverage": 0.8,
+  "max_complexity_per_change": 3,
+  "required_metrics": {
+    "all_tests_pass": true,
+    "narrative_coherence": 0.7,
+    "emotional_consistency": 0.8,
+    "performance_baseline": 1.0
+  },
+  "improvement_priorities": {
+    "critical_bug": 1,
+    "major_bug": 2,
+    "performance": 3,
+    "narrative": 4,
+    "emotional": 5,
+    "variety": 6,
+    "polish": 7
+  },
+  "performance_thresholds": {
+    "initialization_time": 0.1,
+    "operation_time": 0.05,
+    "memory_growth_rate": 0.1
+  },
+  "narrative_quality": {
+    "min_vocabulary_variety": 0.3,
+    "max_repetition_rate": 0.2,
+    "min_coherence_score": 0.7
+  },
+  "emotional_consistency": {
+    "bounds_check": true,
+    "drift_rate_max": 0.1,
+    "trauma_persistence": 0.8
+  },
+  "maintenance_schedule": {
+    "daily_health_check": true,
+    "weekly_deep_analysis": true,
+    "monthly_full_optimization": true
+  },
+  "backup_settings": {
+    "max_backups": 50,
+    "backup_before_changes": true,
+    "auto_cleanup_old_backups": true
+  },
+  "logging": {
+    "log_level": "INFO",
+    "metrics_retention_days": 30,
+    "detailed_performance_logs": false
+  }
+} 

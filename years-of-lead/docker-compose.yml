@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=1
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=years_of_lead
+      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_DB=years_of_lead
+    depends_on:
+      - db
+      - mongo
+    networks:
+      - years-of-lead-network
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=years_of_lead
+    networks:
+      - years-of-lead-network
+
+  mongo:
+    image: mongo:5
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - years-of-lead-network
+
+  ui:
+    build:
+      context: ./src/ui
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/ui:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000/api
+    depends_on:
+      - api
+    networks:
+      - years-of-lead-network
+
+networks:
+  years-of-lead-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:

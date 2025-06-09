@@ -1,0 +1,397 @@
+{
+  "session_start": "2025-06-09T21:37:53.423801",
+  "max_hours": 2.0,
+  "total_complexity_budget": 75,
+  "dry_run": false,
+  "iterations": [
+    {
+      "timestamp": "2025-06-09T21:37:57.868663",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:06.856129",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:15.845305",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:24.849296",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:35.405510",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:45.936231",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:56.551724",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:39:07.480124",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:39:18.410457",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "improvements_made": 0,
+        "remaining_budget": 10,
+        "improvements": [],
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 75
+      }
+    }
+  ],
+  "health_snapshots": [
+    {
+      "timestamp": "2025-06-09T21:37:53.866691",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:37:53.423949",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:37:54.239343",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:37:53.867984",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:37:57.868423",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:37:57.498948",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:03.241768",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:02.870005",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:06.855818",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:06.484385",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:12.227300",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:11.857429",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:15.844973",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:15.471740",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:21.217652",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:20.846573",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:24.848927",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:24.479477",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:30.598440",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:29.850621",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:35.405143",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:34.663443",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:41.178910",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:40.406628",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:45.935805",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:45.190812",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:51.682152",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:50.937526",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:38:56.551300",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:38:55.709844",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:39:02.369450",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:39:01.553177",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:39:07.479617",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:39:06.666879",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:39:13.291131",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:39:12.481553",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T21:39:18.409875",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T21:39:17.599900",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "session_end": "2025-06-09T21:39:23.411955",
+    "total_duration_hours": 0.02499666498767005,
+    "iterations_completed": 9,
+    "total_improvements": 0,
+    "error_count": 0,
+    "complexity_budget_used": 75,
+    "initial_health": 0.625,
+    "final_health": 0.625,
+    "health_trend": 0.0,
+    "avg_iteration_time": 9.99866599506802,
+    "success_rate": 1.0
+  }
+}

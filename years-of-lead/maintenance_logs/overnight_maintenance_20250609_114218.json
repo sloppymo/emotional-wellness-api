@@ -1,0 +1,36 @@
+{
+  "session_start": "2025-06-09T11:42:18.305277",
+  "max_hours": 0.05,
+  "total_complexity_budget": 20,
+  "dry_run": false,
+  "iterations": [],
+  "health_snapshots": [
+    {
+      "timestamp": "2025-06-09T11:42:18.460128",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T11:42:18.305480",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "session_end": "2025-06-09T11:42:18.460365",
+    "total_duration_hours": 4.3025943968031145e-05,
+    "iterations_completed": 0,
+    "total_improvements": 0,
+    "error_count": 0,
+    "complexity_budget_used": 20,
+    "initial_health": 0,
+    "final_health": 0,
+    "health_trend": 0,
+    "avg_iteration_time": 0.1548933982849121,
+    "success_rate": 0.0
+  }
+}

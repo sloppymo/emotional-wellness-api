@@ -1,0 +1,19 @@
+# Years of Lead - Game Dependencies
+
+# Core Python packages
+dataclasses-json>=0.5.0
+typing-extensions>=4.5.0
+pydantic>=2.0.0
+
+# Terminal interface
+colorama>=0.4.6
+termcolor>=2.0.0
+
+# Testing framework
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
+
+# Game utilities
+enum34>=1.1.10
+pathlib2>=2.3.7

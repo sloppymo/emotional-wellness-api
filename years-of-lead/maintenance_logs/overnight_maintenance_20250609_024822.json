@@ -1,0 +1,77 @@
+{
+  "session_start": "2025-06-09T02:48:22.630906",
+  "max_hours": 0.1,
+  "total_complexity_budget": 10,
+  "dry_run": true,
+  "iterations": [
+    {
+      "timestamp": "2025-06-09T02:48:25.109702",
+      "type": "iteration",
+      "data": {
+        "iteration": 1,
+        "dry_run": true,
+        "simulated_improvement": "Example optimization",
+        "complexity_cost": 2,
+        "pre_health": 0.625,
+        "post_health": 0.625,
+        "health_change": 0.0,
+        "remaining_total_budget": 10
+      }
+    }
+  ],
+  "health_snapshots": [
+    {
+      "timestamp": "2025-06-09T02:48:22.784957",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T02:48:22.631104",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T02:48:22.932967",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T02:48:22.785218",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    },
+    {
+      "timestamp": "2025-06-09T02:48:25.109419",
+      "type": "health_snapshot",
+      "data": {
+        "timestamp": "2025-06-09T02:48:24.933293",
+        "narrative_coherence": 0.7,
+        "emotional_consistency": 0.8,
+        "performance": 1.0,
+        "performance_trend": "insufficient_data",
+        "test_coverage": 0.0,
+        "overall_health": 0.625
+      }
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "session_end": "2025-06-09T02:48:30.111163",
+    "total_duration_hours": 0.0020777952008777193,
+    "iterations_completed": 1,
+    "total_improvements": 0,
+    "error_count": 0,
+    "complexity_budget_used": 10,
+    "initial_health": 0.625,
+    "final_health": 0.625,
+    "health_trend": 0.0,
+    "avg_iteration_time": 7.48006272315979,
+    "success_rate": 1.0
+  }
+}

@@ -1,0 +1,30 @@
+# Core dependencies
+fastapi>=0.103.1
+uvicorn>=0.23.2
+pydantic>=2.3.0
+sqlalchemy>=2.0.20
+alembic>=1.12.0
+psycopg2-binary
+pymongo>=4.5.0
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+httpx>=0.24.1
+
+# Utilities
+python-multipart>=0.0.6
+pyjwt>=2.8.0
+bcrypt>=4.0.1
+loguru>=0.7.0
+
+# AI Integration
+openai>=0.27.8
+tiktoken
+numpy
+pandas
+
+# Game Engine
+pygame>=2.5.1
+networkx>=3.1

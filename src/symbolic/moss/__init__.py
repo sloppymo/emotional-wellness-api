@@ -255,6 +255,11 @@ __all__ = [
     "get_moss_processor",
     
     # Crisis classifier
+    # Core processor
+    "MossProcessor",
+    "get_moss_processor",
+    
+    # Crisis classifier
     "CrisisClassifier",
     "CrisisSeverity",
     "RiskSeverity",  # Added for backward compatibility

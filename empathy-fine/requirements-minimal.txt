@@ -1,0 +1,13 @@
+# Minimal requirements for EmpathyFine
+
+# Core GUI Framework
+PyQt6>=6.5.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+jsonlines>=3.1.0
+
+# Basic utilities
+python-dotenv>=1.0.0
+tqdm>=4.65.0 

@@ -137,9 +137,10 @@ class RateLimitWebhooks:
         self.alert_history_key = "rate_limit:alert_history:{}"
         self.webhook_queue_key = "rate_limit:webhook_queue"
         
-        # Template engine
+        # Template engine - Enable autoescape for XSS protection
         self.jinja_env = jinja2.Environment(
-            loader=jinja2.DictLoader(self._get_default_templates())
+            loader=jinja2.DictLoader(self._get_default_templates()),
+            autoescape=True  # Security fix: Enable autoescape to prevent XSS
         )
         
         # HTTP client

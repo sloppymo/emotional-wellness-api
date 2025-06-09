@@ -90,8 +90,8 @@ class ABTesting:
     
     def _assign_variant(self, client_id: str, traffic_allocation: Dict[str, float]) -> str:
         """Assign a variant based on traffic allocation."""
-        # Use consistent hashing for stable assignments
-        hash_value = int(hashlib.md5(client_id.encode()).hexdigest(), 16)
+        # Use consistent hashing for stable assignments - Security fix: Use SHA-256 instead of MD5
+        hash_value = int(hashlib.sha256(client_id.encode()).hexdigest(), 16)
         random_value = (hash_value % 10000) / 10000.0
         
         cumulative = 0.0

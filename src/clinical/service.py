@@ -300,8 +300,9 @@ class ClinicalService:
                 pending_key = "clinical:interventions:pending"
                 await self.redis.lrem(pending_key, 0, intervention_id)
                 
-                # Add to completed list
-                completed_key = "clinical:interventions:completed"
+                # Store completed intervention for tracking
+                # Use a configurable key prefix instead of hardcoded value
+                completed_key = f"clinical:interventions:completed:{intervention_id}"
                 await self.redis.lpush(completed_key, intervention_id)
         
         self._logger.info(f"Updated intervention {intervention_id} status to {status}")

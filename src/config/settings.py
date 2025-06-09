@@ -188,14 +188,24 @@ def get_settings() -> Settings:
         return settings
     except Exception as e:
         logger.error(f"Failed to load settings: {str(e)}")
-        # Provide safe defaults if environment variables are missing
-        # In production, this should fail loudly instead of using defaults
+        
+        # Check if we're in production - if so, fail loudly
+        env = os.environ.get("ENVIRONMENT", "development").lower()
+        if env in ("production", "prod", "staging"):
+            logger.critical("CRITICAL: Missing required environment variables in production!")
+            raise ValueError(
+                "Required environment variables are missing. "
+                "Please set API_KEY, JWT_SECRET_KEY, PHI_ENCRYPTION_KEY, and database credentials."
+            )
+        
+        # Only provide unsafe defaults in development
+        logger.warning("Using unsafe development defaults - DO NOT USE IN PRODUCTION!")
         return Settings(
-            API_KEY="dev_api_key_for_testing_only",
-            JWT_SECRET_KEY="dev_jwt_secret_not_for_production",
-            PHI_ENCRYPTION_KEY="dev_encryption_key_not_for_production",
+            API_KEY="UNSAFE_DEV_API_KEY_PLEASE_SET_REAL_VALUE",
+            JWT_SECRET_KEY="UNSAFE_DEV_JWT_SECRET_PLEASE_SET_REAL_VALUE_WITH_32_PLUS_CHARS",
+            PHI_ENCRYPTION_KEY="UNSAFE_DEV_ENCRYPT_KEY_SET_REAL",
             POSTGRES_USER="postgres",
-            POSTGRES_PASSWORD="postgres",
+            POSTGRES_PASSWORD="UNSAFE_DEV_PASSWORD",
             POSTGRES_DB="emotional_wellness",
             POSTGRES_HOST="localhost"
         )

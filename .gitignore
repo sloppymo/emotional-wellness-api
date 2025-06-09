@@ -344,4 +344,7 @@ assets/uncompressed/
 # Local configuration
 config/local.json
 config/development.json
-config/production.json 
+config/production.json
+
+# External projects and tools
+sylva-tune/ 

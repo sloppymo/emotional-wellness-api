@@ -508,5 +508,85 @@
       "narrative_quality": 1.0,
       "emotional_consistency": 0.6
     }
+  },
+  {
+    "timestamp": "2025-06-09T21:40:58.971013",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:41:10.001193",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:41:20.939263",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:41:31.855390",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:41:42.801149",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:41:53.769888",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:42:04.699875",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:42:15.646180",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
   }
 ]

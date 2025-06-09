@@ -478,5 +478,35 @@
       "narrative_quality": 1.0,
       "emotional_consistency": 0.6
     }
+  },
+  {
+    "timestamp": "2025-06-09T21:40:26.177377",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:40:37.097371",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:40:48.018585",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
   }
 ]

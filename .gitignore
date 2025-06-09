@@ -347,4 +347,13 @@ config/development.json
 config/production.json
 
 # External projects and tools
-sylva-tune/ 
+sylva-tune/
+
+# Large files and reports
+security_audit_report.json
+bandit_report.json
+shadowrun_bandit_report.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json 

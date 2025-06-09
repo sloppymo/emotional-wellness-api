@@ -668,5 +668,125 @@
       "narrative_quality": 1.0,
       "emotional_consistency": 0.6
     }
+  },
+  {
+    "timestamp": "2025-06-09T21:49:12.151132",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:49:23.446009",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:49:34.723755",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:49:46.042009",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:49:57.329843",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:50:08.644380",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:50:19.940600",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:50:31.233256",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:50:42.547020",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:50:53.847540",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:51:05.217511",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
+  },
+  {
+    "timestamp": "2025-06-09T21:51:16.538938",
+    "iteration": 0,
+    "phase": "baseline",
+    "metrics": {
+      "performance": 1,
+      "narrative_quality": 1.0,
+      "emotional_consistency": 0.6
+    }
   }
 ]

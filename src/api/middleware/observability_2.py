@@ -790,3 +790,201 @@ class RateLimitObservability:
         patterns = await self.redis.keys("observability:sli_events:*")
         for pattern in patterns:
             await self.redis.expire(pattern, 86400 * 7) 
+class RateLimitObservability2(RateLimitObservability):
+    """
+    Enhanced observability system for rate limiting with additional features
+    beyond the base RateLimitObservability class.
+    """
+    
+    def __init__(
+        self, 
+        redis_client: Redis,
+        tracer: Optional[trace.Tracer] = None,
+        meter_provider: Optional[MeterProvider] = None,
+        structured_logger: Optional[logging.Logger] = None,
+        enable_enhanced_metrics: bool = True,
+        enable_predictive_analytics: bool = True
+    ):
+        super().__init__(redis_client, tracer, meter_provider, structured_logger)
+        self.enable_enhanced_metrics = enable_enhanced_metrics
+        self.enable_predictive_analytics = enable_predictive_analytics
+        
+        # Additional Redis keys for enhanced observability
+        self.predictive_trends_key = "observability:predictive_trends:{}"
+        self.enhanced_metrics_key = "observability:enhanced_metrics:{}"
+        
+        # Initialize enhanced metrics if enabled
+        if self.enable_enhanced_metrics and self.meter_provider:
+            self._setup_enhanced_metrics()
+    
+    def _setup_enhanced_metrics(self):
+        """Setup additional metrics for enhanced observability."""
+        self.predictive_gauge = self.meter.create_gauge(
+            "rate_limit_predictive_load",
+            description="Predictive load estimation for next time period"
+        )
+        self.anomaly_score_gauge = self.meter.create_gauge(
+            "rate_limit_anomaly_score",
+            description="Anomaly detection score"
+        )
+        self.compliance_score_gauge = self.meter.create_gauge(
+            "rate_limit_compliance_score",
+            description="Compliance score based on regulatory requirements"
+        )
+        
+    async def record_enhanced_metrics(
+        self,
+        client_id: str,
+        tenant_id: str,
+        endpoint: str,
+        response_time: float,
+        status_code: int,
+        rate_limit_remaining: int
+    ):
+        """Record enhanced metrics for deeper analysis."""
+        with self.tracer.start_as_current_span(
+            "record_enhanced_metrics",
+            attributes={
+                "client.id": client_id,
+                "tenant.id": tenant_id,
+                "endpoint": endpoint,
+                "response.time": response_time,
+                "status.code": status_code,
+                "rate_limit.remaining": rate_limit_remaining
+            }
+        ) as span:
+            try:
+                metrics_key = self.enhanced_metrics_key.format(client_id)
+                
+                # Get existing metrics or create new
+                metrics_data = await self.redis.get(metrics_key)
+                metrics = json.loads(metrics_data) if metrics_data else {
+                    "response_times": [],
+                    "status_codes": {},
+                    "rate_limit_trends": [],
+                    "last_updated": datetime.now().isoformat()
+                }
+                
+                # Update metrics
+                metrics["response_times"].append(response_time)
+                if len(metrics["response_times"]) > 100:
+                    metrics["response_times"] = metrics["response_times"][-100:]
+                    
+                metrics["status_codes"][str(status_code)] = metrics["status_codes"].get(str(status_code), 0) + 1
+                metrics["rate_limit_trends"].append(rate_limit_remaining)
+                if len(metrics["rate_limit_trends"]) > 100:
+                    metrics["rate_limit_trends"] = metrics["rate_limit_trends"][-100:]
+                    
+                metrics["last_updated"] = datetime.now().isoformat()
+                
+                # Store updated metrics
+                await self.redis.set(metrics_key, json.dumps(metrics))
+                await self.redis.expire(metrics_key, 86400)  # 1 day
+                
+                # Update OpenTelemetry metrics if enabled
+                if self.enable_enhanced_metrics and self.meter_provider:
+                    avg_response_time = sum(metrics["response_times"]) / len(metrics["response_times"])
+                    error_rate = sum(1 for code in metrics["status_codes"].keys() if int(code) >= 400) / sum(metrics["status_codes"].values())
+                    
+                    self.anomaly_score_gauge.set(
+                        self._calculate_anomaly_score(metrics),
+                        {"client_id": client_id, "tenant_id": tenant_id}
+                    )
+                    
+                span.set_status(Status(StatusCode.OK))
+                
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, str(e)))
+                self.logger.error(f"Failed to record enhanced metrics: {e}")
+                
+    async def predict_future_load(
+        self,
+        client_id: str,
+        tenant_id: str,
+        time_window_minutes: int = 60
+    ) -> Dict[str, Any]:
+        """
+        Predict future load based on historical patterns.
+        Returns a prediction dictionary with estimated values.
+        """
+        if not self.enable_predictive_analytics:
+            return {"enabled": False}
+            
+        with self.tracer.start_as_current_span(
+            "predict_future_load",
+            attributes={
+                "client.id": client_id,
+                "tenant.id": tenant_id,
+                "time_window.minutes": time_window_minutes
+            }
+        ) as span:
+            try:
+                # In a real implementation, this would use historical data
+                # to predict future load using time series analysis
+                
+                # For now, return a simple mock prediction
+                prediction = {
+                    "enabled": True,
+                    "estimated_requests": 100,
+                    "estimated_error_rate": 0.05,
+                    "estimated_response_time": 250,
+                    "confidence": 0.8,
+                    "prediction_timestamp": datetime.now().isoformat(),
+                    "prediction_window_end": (datetime.now() + timedelta(minutes=time_window_minutes)).isoformat()
+                }
+                
+                # Store prediction
+                prediction_key = self.predictive_trends_key.format(client_id)
+                await self.redis.set(prediction_key, json.dumps(prediction))
+                await self.redis.expire(prediction_key, time_window_minutes * 60)
+                
+                # Update predictive gauge if metrics enabled
+                if self.enable_enhanced_metrics and self.meter_provider:
+                    self.predictive_gauge.set(
+                        prediction["estimated_requests"],
+                        {"client_id": client_id, "tenant_id": tenant_id}
+                    )
+                
+                span.set_status(Status(StatusCode.OK))
+                return prediction
+                
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, str(e)))
+                self.logger.error(f"Failed to predict future load: {e}")
+                return {"enabled": False, "error": str(e)}
+    
+    def _calculate_anomaly_score(self, metrics: Dict[str, Any]) -> float:
+        """
+        Calculate an anomaly score based on metrics.
+        Returns a value between 0.0 and 1.0 where higher means more anomalous.
+        """
+        # In a real implementation, this would use statistical analysis
+        # and machine learning to detect anomalies
+        
+        # For now, return a simple mock score
+        try:
+            # Calculate variance in response times as a simple anomaly indicator
+            if len(metrics["response_times"]) < 2:
+                return 0.0
+                
+            mean_response_time = sum(metrics["response_times"]) / len(metrics["response_times"])
+            variance = sum((t - mean_response_time) ** 2 for t in metrics["response_times"]) / len(metrics["response_times"])
+            
+            # Normalize to 0-1 range with sigmoid function
+            normalized_variance = 1 / (1 + np.exp(-variance / 1000))
+            
+            # Factor in error rate
+            error_count = sum(metrics["status_codes"].get(str(code), 0) for code in range(400, 600))
+            total_count = sum(metrics["status_codes"].values())
+            error_rate = error_count / total_count if total_count > 0 else 0
+            
+            # Combine factors (weighted average)
+            anomaly_score = (0.7 * normalized_variance) + (0.3 * error_rate)
+            
+            return min(1.0, max(0.0, anomaly_score))
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating anomaly score: {e}")
+            return 0.0

@@ -66,7 +66,13 @@ def get_moss_processor() -> MossProcessor:
     return MossProcessor()
 
 # Update crisis_classifier.py to remove circular import
-with open("src/symbolic/moss/crisis_classifier.py", "r") as f:
+import os
+
+# Get the directory of the current file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+classifier_path = os.path.join(current_dir, "crisis_classifier.py")
+
+with open(classifier_path, "r") as f:
     content = f.read()
 
 # Remove the MossProcessor import
@@ -75,7 +81,7 @@ content = content.replace(
     "# MossProcessor moved to processor.py"
 )
 
-with open("src/symbolic/moss/crisis_classifier.py", "w") as f:
+with open(classifier_path, "w") as f:
     f.write(content)
 
 # Update __init__.py to expose MossProcessor

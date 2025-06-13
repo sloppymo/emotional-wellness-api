@@ -8,7 +8,7 @@ from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-from core.config import settings
+from config.settings import get_settings
 import structured_logging.structured as log
 
 class IPWhitelistMiddleware(BaseHTTPMiddleware):
@@ -25,8 +25,8 @@ class IPWhitelistMiddleware(BaseHTTPMiddleware):
     ):
         super().__init__(app)
         # Use provided whitelist or load from settings
-        self.whitelist = whitelist or settings.ADMIN_IP_WHITELIST
-        self.admin_routes = admin_routes or settings.ADMIN_ROUTE_PATTERNS
+        self.whitelist = whitelist or get_settings().ADMIN_IP_WHITELIST
+        self.admin_routes = admin_routes or get_settings().ADMIN_ROUTE_PATTERNS
         self.networks = []
         
         # Convert IP strings to network objects for easy checking

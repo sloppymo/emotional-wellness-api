@@ -1,5 +1,13 @@
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional, List
+
+class RateLimitConfig:
+    """Configuration for a rate limit."""
+    
+    def __init__(self, limit: int, window_seconds: int, burst_multiplier: float = 1.0):
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self.burst_multiplier = burst_multiplier
 
 class RateLimitCategory(Enum):
     """Categories of endpoints with different rate limit requirements."""

@@ -13,11 +13,11 @@ import hashlib
 import re
 import logging
 from fastapi import Request, Response, HTTPException
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from redis.asyncio import Redis
 import ipaddress
 from starlette.status import HTTP_429_TOO_MANY_REQUESTS, HTTP_403_FORBIDDEN
-from ..config.settings import get_settings
+# Import moved inside functions to avoid circular imports
 from .rate_limit_types import (
     RateLimitCategory,
     DEFAULT_RATE_LIMITS,
@@ -37,7 +37,10 @@ from .zero_trust_security import ZeroTrustRateLimitSecurity, SecurityContext, Tr
 import json
 import jwt
 
-settings = get_settings()
+def get_app_settings():
+    # Import here to avoid circular imports
+    from config.settings import get_settings
+    return get_settings()
 logger = logging.getLogger(__name__)
 
 
@@ -609,7 +612,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             try:
                 token = auth_header.split(" ")[1]
                 payload = jwt.decode(
-                    token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+                    token, get_app_settings().JWT_SECRET_KEY, algorithms=[get_app_settings().JWT_ALGORITHM]
                 )
                 return f"user:{payload['sub']}"
             except Exception:
@@ -641,7 +644,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
     def _get_limit(self, category: RateLimitCategory) -> int:
         """Get rate limit for a category."""
-        return settings.RATE_LIMITS.get(category.value, 100)
+        return get_app_settings().RATE_LIMITS.get(category.value, 100)
 
     def cleanup(self):
         """Cleanup resources."""
@@ -728,8 +731,8 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             token = auth_header.split(" ")[1]
             payload = jwt.decode(
                 token,
-                settings.JWT_SECRET_KEY,
-                algorithms=[settings.JWT_ALGORITHM],
+                get_app_settings().JWT_SECRET_KEY,
+                algorithms=[get_app_settings().JWT_ALGORITHM],
                 options={"verify_exp": False},  # For demo purposes
             )
             return payload.get("clinical_role")
@@ -750,8 +753,8 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
                 token = auth_header.split(" ")[1]
                 payload = jwt.decode(
                     token,
-                    settings.JWT_SECRET_KEY,
-                    algorithms=[settings.JWT_ALGORITHM],
+                    get_app_settings().JWT_SECRET_KEY,
+                    algorithms=[get_app_settings().JWT_ALGORITHM],
                     options={"verify_exp": False},
                 )
                 return payload.get("mfa_verified", False)
